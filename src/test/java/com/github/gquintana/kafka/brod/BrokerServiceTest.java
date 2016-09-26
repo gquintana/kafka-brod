@@ -88,11 +88,23 @@ public class BrokerServiceTest {
     @Test
     public void testGetBroker() throws Exception {
         // When
-        Broker broker = brokerService.getBroker(0);
+        Broker broker = brokerService.getBroker(0).get();
         // Then
         assertThat(broker, notNullValue());
+        assertThat(broker.getId(), is(0));
         assertThat(broker.getPort(), equalTo(9092));
         assertThat(broker.getEndpoints().size(), equalTo(1));
+        assertThat(broker.getController().booleanValue(), is(true));
 
     }
+
+    @Test
+    public void testController() throws Exception {
+        // When
+        int controllerId = brokerService.getController().get();
+        // Then
+        assertThat(controllerId, equalTo(0));
+
+    }
+
 }

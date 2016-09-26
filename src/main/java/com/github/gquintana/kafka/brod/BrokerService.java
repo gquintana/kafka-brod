@@ -1,5 +1,6 @@
 package com.github.gquintana.kafka.brod;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kafka.utils.ZkUtils;
 
@@ -54,12 +55,12 @@ public class BrokerService {
     /**
      * Get broker detailed info
      */
-    public Broker getBroker(int id) {
+    public Optional<Broker> getBroker(int id) {
         String json = zookeeperService.getData("/brokers/ids/" + id);
         if (json == null) {
-            return null;
+            return Optional.empty();
         }
-        return parseBroker(id, json);
+        return Optional.of(parseBroker(id, json));
     }
 
     Broker parseBroker(int id, String json) {
@@ -84,6 +85,10 @@ public class BrokerService {
                 }
             }
             broker.setEndpoints(jsonBroker.getEndpoints());
+            Optional<Integer> controllerId = getController();
+            if (controllerId.isPresent()) {
+                broker.setController(id == controllerId.get().intValue());
+            }
             return broker;
         } catch (IOException e) {
             throw new KafkaBrodException("Failed to read or parse broker info", e);
@@ -98,5 +103,30 @@ public class BrokerService {
                 .map(Integer::valueOf)
                 .sorted()
                 .collect(Collectors.toList());
+    }
+
+    private static class Controller {
+        private int brokerid;
+        public int getBrokerid() {
+            return brokerid;
+        }
+        public void setBrokerid(int brokerid) {
+            this.brokerid = brokerid;
+        }
+    }
+    /**
+     * Get broker elected as controller
+     */
+    public Optional<Integer> getController() {
+        String json = zookeeperService.getData("/controller");
+        if (json == null) {
+            return Optional.empty();
+        }
+        try {
+            Controller controller = objectMapper.readValue(json, Controller.class);
+            return Optional.of(controller.getBrokerid());
+        } catch (IOException e) {
+            throw new KafkaBrodException("Failed to read or parse controller info", e);
+        }
     }
 }

@@ -71,7 +71,7 @@ public class TopicServiceTest {
         topicService.deleteTopic(name);
         // Then
         List<String> topics2 = topicService.getTopics();
-        Topic topic = topicService.getTopic(name);
+        Topic topic = topicService.getTopic(name).get();
         assertThat(topics2.size(), equalTo(topics.size()));
     }
 
@@ -93,7 +93,7 @@ public class TopicServiceTest {
         String name = "test_get-" + RANDOM.nextInt(999);
         topicService.createTopic(new Topic(name, 3, 1, new Properties()));
         // When
-        Topic topic = topicService.getTopic(name);
+        Topic topic = topicService.getTopic(name).get();
         // Then
         assertThat(topic, notNullValue());
         assertThat(topic.getName(), equalTo(name));
@@ -106,7 +106,7 @@ public class TopicServiceTest {
         // Given
         List<String> topics = topicService.getTopics();
         // When
-        Topic topic = topicService.getTopic("test_get-not_found");
+        Topic topic = topicService.getTopic("test_get-not_found").orElse(null);
         // Then
         assertThat(topic, nullValue());
     }

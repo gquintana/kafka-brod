@@ -9,6 +9,7 @@ public class Broker {
     private String protocol;
     private Integer jmxPort;
     private List<String> endpoints;
+    private Boolean controller;
 
     public Broker() {
     }
@@ -63,5 +64,13 @@ public class Broker {
 
     public void setEndpoints(List<String> endpoints) {
         this.endpoints = endpoints;
+    }
+
+    public Boolean getController() {
+        return controller;
+    }
+
+    public void setController(Boolean controller) {
+        this.controller = controller;
     }
 }

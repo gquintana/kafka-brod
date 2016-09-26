@@ -6,6 +6,7 @@ import kafka.utils.ZkUtils;
 import org.apache.kafka.common.requests.MetadataResponse;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 public class TopicService {
@@ -31,15 +32,15 @@ public class TopicService {
         AdminUtils.changeTopicConfig(getZkUtils(), topic.getName(), topic.getConfig());
     }
 
-    public Topic getTopic(String name) {
+    public Optional<Topic> getTopic(String name) {
         if (!AdminUtils.topicExists(getZkUtils(), name)) {
-            return null;
+            return Optional.empty();
         }
         Properties config = AdminUtils.fetchEntityConfig(getZkUtils(), "topic", name);
         MetadataResponse.TopicMetadata topicMetadata = AdminUtils.fetchTopicMetadataFromZk(name, getZkUtils());
         int partitions = topicMetadata.partitionMetadata().stream().mapToInt(MetadataResponse.PartitionMetadata::partition).max().orElse(-1) + 1;
         int replicationFactor = topicMetadata.partitionMetadata().stream().mapToInt(p -> p.replicas().size()).max().orElse(0);
-        return new Topic(name, partitions, replicationFactor, config);
+        return Optional.of(new Topic(name, partitions, replicationFactor, config));
     }
 
     public List<String> getTopics() {

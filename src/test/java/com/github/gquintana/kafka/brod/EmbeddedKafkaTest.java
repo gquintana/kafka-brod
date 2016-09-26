@@ -26,7 +26,7 @@ public class EmbeddedKafkaTest {
     }
 
     @Test
-    public void testKafka() throws IOException {
+    public void testKafka() throws Exception {
         // Given
         File zookeeperData = temporaryFolder.newFolder("zookeeper");
         EmbeddedZookeeper zookeeper = new EmbeddedZookeeper(zookeeperData);

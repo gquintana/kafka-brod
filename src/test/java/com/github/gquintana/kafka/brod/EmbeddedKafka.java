@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class EmbeddedKafka {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedKafka.class);
@@ -60,7 +61,9 @@ public class EmbeddedKafka {
             LOGGER.info("Consuming Kafka messages");
             List<String> messages = new ArrayList<>();
             long end=System.currentTimeMillis() + timeout;
+            LOGGER.debug(consumer.assignment().stream().map(p -> p.topic()+"-"+p.partition()).collect(Collectors.joining(",")));
             while(messages.isEmpty() && System.currentTimeMillis() < end) {
+                LOGGER.info("Polling for messages");
                 ConsumerRecords<String, String> records = consumer.poll(timeout / 10L);
                 for (ConsumerRecord<String, String> record : records) {
                     messages.add(record.value());
