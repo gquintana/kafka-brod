@@ -3,6 +3,7 @@ package com.github.gquintana.kafka.brod;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import org.hamcrest.Matchers;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -22,7 +23,7 @@ public class BrokerServiceTest {
     public static final TemporaryFolder TEMPORARY_FOLDER = new TemporaryFolder();
 
     @ClassRule
-    public static final EmbeddedKafkaRule KAFKA_RULE = new EmbeddedKafkaRule(TEMPORARY_FOLDER);
+    public static final EmbeddedKafkaRule KAFKA_RULE = new EmbeddedKafkaRule(TEMPORARY_FOLDER, 2);
 
     private static BrokerService brokerService;
 
@@ -43,7 +44,8 @@ public class BrokerServiceTest {
         // When
         List<Integer> brokers = brokerService.getBrokers();
         // Then
-        assertThat(brokers, hasItem(0));
+        assertThat(brokers, Matchers.hasSize(2));
+        assertThat(brokers, hasItems(0, 1));
     }
 
     @Test

@@ -1,9 +1,11 @@
 package com.github.gquintana.kafka.brod;
 
+import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.server.ServerCnxnFactory;
 import org.apache.zookeeper.server.ServerConfig;
 import org.apache.zookeeper.server.ZooKeeperServerMain;
 import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
+import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +25,13 @@ public class EmbeddedZookeeper {
 
     public EmbeddedZookeeper(File dataDir) {
         this.dataDir = dataDir;
+    }
+
+    public static EmbeddedZookeeper createAndStart(TemporaryFolder temporaryFolder) throws IOException {
+        File zookeeperData = temporaryFolder.newFolder("zookeeper");
+        EmbeddedZookeeper zookeeper = new EmbeddedZookeeper(zookeeperData);
+        zookeeper.start();
+        return zookeeper;
     }
 
     public void start() throws IOException {

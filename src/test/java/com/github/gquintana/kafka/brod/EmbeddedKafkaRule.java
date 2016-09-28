@@ -9,41 +9,41 @@ public class EmbeddedKafkaRule extends ExternalResource {
     private final TemporaryFolder temporaryFolder;
 
     private EmbeddedZookeeper zookeeper;
-    private EmbeddedKafka kafka;
+    private final EmbeddedKafka[] kafkas;
 
     public EmbeddedKafkaRule(TemporaryFolder temporaryFolder) {
+        this(temporaryFolder, 1);
+    }
+
+    /**
+     * @param kafkaNb Number of Kafka brokers
+     */
+    public EmbeddedKafkaRule(TemporaryFolder temporaryFolder, int kafkaNb) {
         this.temporaryFolder = temporaryFolder;
+        this.kafkas = new EmbeddedKafka[kafkaNb];
     }
 
     public EmbeddedZookeeper getZookeeper() {
         return zookeeper;
     }
 
-    public void setZookeeper(EmbeddedZookeeper zookeeper) {
-        this.zookeeper = zookeeper;
-    }
-
     public EmbeddedKafka getKafka() {
-        return kafka;
-    }
-
-    public void setKafka(EmbeddedKafka kafka) {
-        this.kafka = kafka;
+        return kafkas[0];
     }
 
     @Override
     protected void before() throws Throwable {
-        File zookeeperData = temporaryFolder.newFolder("zookeeper");
-        zookeeper = new EmbeddedZookeeper(zookeeperData);
-        zookeeper.start();
-        File kafkaData = temporaryFolder.newFolder("kafka");
-        kafka = new EmbeddedKafka(kafkaData);
-        kafka.start();
+        zookeeper = EmbeddedZookeeper.createAndStart(temporaryFolder);
+        for (int i = 0; i < kafkas.length; i++) {
+            kafkas[i] = EmbeddedKafka.createAndStart(temporaryFolder, i);
+        }
     }
 
     @Override
     protected void after() {
-        kafka.stop();
+        for(EmbeddedKafka kafka:kafkas) {
+            kafka.stop();
+        }
         zookeeper.stop();
     }
 }
