@@ -15,7 +15,7 @@ public class Topic {
         this.name = name;
         this.partitions = partitions;
         this.replicationFactor = replicationFactor;
-        this.config = config;
+        this.config = config == null ? new Properties() : config;
     }
 
     public String getName() {
