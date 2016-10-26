@@ -6,13 +6,10 @@ import kafka.utils.ZkUtils;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.requests.MetadataResponse;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -20,11 +17,9 @@ import java.util.stream.Collectors;
  */
 public class PartitionService {
     private final ZookeeperService zookeeperService;
-    private final ObjectMapper objectMapper;
 
-    public PartitionService(ZookeeperService zookeeperService, ObjectMapper objectMapper) {
+    public PartitionService(ZookeeperService zookeeperService) {
         this.zookeeperService = zookeeperService;
-        this.objectMapper = objectMapper;
     }
 
     private ZkUtils getZkUtils() {

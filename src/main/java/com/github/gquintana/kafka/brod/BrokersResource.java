@@ -10,10 +10,12 @@ import java.util.List;
 
 @Path("/brokers")
 @Produces(MediaType.APPLICATION_JSON)
-public class BrokerResource {
+public class BrokersResource {
+    private final Resources resources;
     private final BrokerService brokerService;
 
-    public BrokerResource(BrokerService brokerService) {
+    public BrokersResource(Resources resources, BrokerService brokerService) {
+        this.resources = resources;
         this.brokerService = brokerService;
     }
 
@@ -29,7 +31,7 @@ public class BrokerResource {
      * Get broker detailed info
      */
     @GET
-    @Path("/:id")
+    @Path("{id}")
     public Response getBroker(@PathParam("id") int id) {
         return Responses.of(brokerService.getBroker(id));
     }

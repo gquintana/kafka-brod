@@ -33,7 +33,7 @@ public class TopicService {
     }
 
     public Optional<Topic> getTopic(String name) {
-        if (!AdminUtils.topicExists(getZkUtils(), name)) {
+        if (!existTopic(name)) {
             return Optional.empty();
         }
         Properties config = AdminUtils.fetchEntityConfig(getZkUtils(), "topic", name);
@@ -41,6 +41,10 @@ public class TopicService {
         int partitions = topicMetadata.partitionMetadata().stream().mapToInt(MetadataResponse.PartitionMetadata::partition).max().orElse(-1) + 1;
         int replicationFactor = topicMetadata.partitionMetadata().stream().mapToInt(p -> p.replicas().size()).max().orElse(0);
         return Optional.of(new Topic(name, partitions, replicationFactor, config));
+    }
+
+    public boolean existTopic(String name) {
+        return AdminUtils.topicExists(getZkUtils(), name);
     }
 
     public List<String> getTopics() {
