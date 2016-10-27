@@ -1,5 +1,6 @@
 package com.github.gquintana.kafka.brod;
 
+import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -30,7 +31,6 @@ public class TopicServiceTest {
     @BeforeClass
     public static void setUpClass() throws IOException {
         zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
-        zookeeperService.connect();
         topicService = new TopicService(zookeeperService);
     }
 
@@ -80,7 +80,10 @@ public class TopicServiceTest {
         // Given
         List<String> topics = topicService.getTopics();
         // When
-        topicService.deleteTopic("test_delete-not_found");
+        try {
+            topicService.deleteTopic("test_delete-not_found");
+        } catch (UnknownTopicOrPartitionException e) {
+        }
         // Then
         List<String> topics2 = topicService.getTopics();
         assertThat(topics2.size(), equalTo(topics.size()));

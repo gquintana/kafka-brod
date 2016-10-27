@@ -30,7 +30,6 @@ public class BrokerServiceTest {
     @BeforeClass
     public static void setUpClass() throws Exception {
         ZookeeperService zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
-        zookeeperService.connect();
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);

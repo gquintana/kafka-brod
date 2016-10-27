@@ -2,11 +2,14 @@ package com.github.gquintana.kafka.brod;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kafka.admin.AdminUtils;
+import kafka.server.ConfigType;
 import kafka.utils.ZkUtils;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -68,21 +71,30 @@ public class BrokerService {
             Broker broker = new Broker(id);
             Broker jsonBroker = objectMapper.readValue(json, Broker.class);
             List<Endpoint> endpoints1 = jsonBroker.getEndpoints().stream().map(Endpoint::parse).collect(Collectors.toList());
+            // Normalize Port
             if (jsonBroker.getPort() != null && jsonBroker.getPort().intValue() > 0) {
                 broker.setPort(jsonBroker.getPort());
             } else if (endpoints1.size() == 1){
                 broker.setPort(endpoints1.get(0).port);
             }
+            // Normalize JMX Port
             if (jsonBroker.getJmxPort() != null && jsonBroker.getJmxPort().intValue() > 0) {
                 broker.setJmxPort(jsonBroker.getJmxPort());
             }
-            if (jsonBroker.getHost() != null) {
+            // Normalize Host
+            if (jsonBroker.getHost() != null && !jsonBroker.getHost().isEmpty()) {
                 broker.setHost(jsonBroker.getHost());
             } else {
                 Optional<String> firstHost = endpoints1.stream().map(e -> e.host).filter(h -> h != null && ! h.isEmpty()).findFirst();
                 if (firstHost.isPresent()) {
                     broker.setHost(firstHost.get());
                 }
+            }
+            // Normalize Protocol
+            if (jsonBroker.getHost() != null && !jsonBroker.getHost().isEmpty()) {
+                broker.setHost(jsonBroker.getHost());
+            } else if (endpoints1.size() == 1){
+                broker.setProtocol(endpoints1.get(0).protocol);
             }
             broker.setEndpoints(jsonBroker.getEndpoints());
             Optional<Integer> controllerId = getController();

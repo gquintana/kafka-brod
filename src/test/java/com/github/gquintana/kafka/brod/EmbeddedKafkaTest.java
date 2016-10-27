@@ -1,5 +1,8 @@
 package com.github.gquintana.kafka.brod;
 
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -7,8 +10,11 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 public class EmbeddedKafkaTest {
@@ -24,7 +30,7 @@ public class EmbeddedKafkaTest {
         zookeeper.stop();
     }
 
-    @Test @Ignore
+    @Test
     public void testKafka() throws Exception {
         // Given
         EmbeddedZookeeper zookeeper = EmbeddedZookeeper.createAndStart(temporaryFolder);
@@ -38,6 +44,31 @@ public class EmbeddedKafkaTest {
         zookeeper.stop();
     }
 
+    @Test
+    public void testKafka_Seek() throws Exception {
+        // Given
+        EmbeddedZookeeper zookeeper = EmbeddedZookeeper.createAndStart(temporaryFolder);
+        // When
+        EmbeddedKafka kafka = EmbeddedKafka.createAndStart(temporaryFolder, 0);
+        try(Producer<Long, String> producer = kafka.createProducer()) {
+            for (long i = 0; i < 100; i++) {
+                producer.send(new ProducerRecord<>("test_topic_seek", i, "Hello Kafka " + i)).get();
+            }
+        }
+        try(Consumer<Long, String> consumer = kafka.createConsumer("test_group")) {
+            consumer.subscribe(Arrays.asList("test_topic_seek"));
+            List<String> messages = kafka.consume(consumer, 1000L);
+            assertFalse(messages.isEmpty());
+            consumer.seekToBeginning(consumer.assignment());
+            kafka.seekToBeggining("test_topic_seek", "test_group");
+            List<String> messages2 = kafka.consume(consumer, 1000L);
+            // Then
+            assertFalse(messages2.isEmpty());
+            assertEquals(messages.get(0), messages2.get(0));
+        }
+        kafka.stop();
+        zookeeper.stop();
+    }
     @Test
     public void testMultiKafka() throws Exception {
         // Given

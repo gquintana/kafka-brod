@@ -28,13 +28,12 @@ public class PartitionServiceTest {
     @BeforeClass
     public static void setUpClass() throws Exception {
         ZookeeperService zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
-        zookeeperService.connect();
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         topicService = new TopicService(zookeeperService);
-        partitionService = new PartitionService(zookeeperService, objectMapper);
+        partitionService = new PartitionService(zookeeperService);
     }
 
     @Test

@@ -27,7 +27,6 @@ public class ZookeeperServiceTest {
         kafka = new EmbeddedKafka(kafkaData);
         kafka.start();
         zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
-        zookeeperService.connect();
     }
 
     @Test

@@ -7,6 +7,7 @@ import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.ws.rs.ext.ContextResolver;
 import java.net.URI;
@@ -23,7 +24,6 @@ public class KafkaBrodApplication implements AutoCloseable {
 
     public void run() throws Exception {
         zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
-        zookeeperService.connect();
 
         objectMapper();
 
@@ -74,6 +74,9 @@ public class KafkaBrodApplication implements AutoCloseable {
     }
 
     private HttpServer httpServer() {
+        // Grizzly uses JUL
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
         httpServer = GrizzlyHttpServerFactory.createHttpServer(URI.create(baseUri), resourceConfig);
         return httpServer;
     }

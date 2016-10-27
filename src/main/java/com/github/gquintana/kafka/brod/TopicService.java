@@ -2,6 +2,7 @@ package com.github.gquintana.kafka.brod;
 
 import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;
+import kafka.server.ConfigType;
 import kafka.utils.ZkUtils;
 import org.apache.kafka.common.requests.MetadataResponse;
 
@@ -36,7 +37,7 @@ public class TopicService {
         if (!existTopic(name)) {
             return Optional.empty();
         }
-        Properties config = AdminUtils.fetchEntityConfig(getZkUtils(), "topic", name);
+        Properties config = AdminUtils.fetchEntityConfig(getZkUtils(), ConfigType.Topic(), name);
         MetadataResponse.TopicMetadata topicMetadata = AdminUtils.fetchTopicMetadataFromZk(name, getZkUtils());
         int partitions = topicMetadata.partitionMetadata().stream().mapToInt(MetadataResponse.PartitionMetadata::partition).max().orElse(-1) + 1;
         int replicationFactor = topicMetadata.partitionMetadata().stream().mapToInt(p -> p.replicas().size()).max().orElse(0);
