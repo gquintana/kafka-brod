@@ -99,7 +99,7 @@ public class EmbeddedKafka {
     }
     public List<String> consume(String topic, String groupId, long timeout) {
         try (Consumer<Long, String> consumer = createConsumer(groupId)) {
-            consumer.subscribe(Arrays.asList(topic));
+            consumer.subscribe(Collections.singletonList(topic));
             return consume(consumer, timeout);
         }
     }
@@ -138,7 +138,7 @@ public class EmbeddedKafka {
         consumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
         consumerConfig.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
         try (Consumer<Long, String> consumer = new KafkaConsumer<>(consumerConfig)) {
-            consumer.subscribe(Arrays.asList(topic));
+            consumer.subscribe(Collections.singletonList(topic));
             Set<TopicPartition> topicPartitions = null;
             while(topicPartitions ==null) {
                 topicPartitions = consumer.assignment();

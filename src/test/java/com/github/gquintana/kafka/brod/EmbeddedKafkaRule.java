@@ -3,8 +3,6 @@ package com.github.gquintana.kafka.brod;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-
 public class EmbeddedKafkaRule extends ExternalResource {
     private final TemporaryFolder temporaryFolder;
 

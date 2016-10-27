@@ -1,6 +1,5 @@
 package com.github.gquintana.kafka.brod;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import kafka.admin.AdminUtils;
 import kafka.utils.ZkUtils;
 import org.apache.kafka.common.Node;
@@ -46,7 +45,7 @@ public class PartitionService {
 
     private static Partition convertToPartition(String topic,MetadataResponse.PartitionMetadata partitionMetadata) {
         Partition partition = new Partition(topic, partitionMetadata.partition());
-        final Set<Integer> inSyncBrokers = partitionMetadata.isr().stream().map(n -> n.id()).collect(Collectors.toSet());
+        final Set<Integer> inSyncBrokers = partitionMetadata.isr().stream().map(Node::id).collect(Collectors.toSet());
         int leaderBroker = partitionMetadata.leader().id();
         List<Replica> replicas = partitionMetadata.replicas().stream().map(r -> convertToReplica(r, inSyncBrokers, leaderBroker)).collect(Collectors.toList());
         partition.setReplicas(replicas);

@@ -6,12 +6,9 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import org.hamcrest.Matchers;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.*;

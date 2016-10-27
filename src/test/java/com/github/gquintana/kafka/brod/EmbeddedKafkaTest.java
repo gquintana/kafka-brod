@@ -3,16 +3,14 @@ package com.github.gquintana.kafka.brod;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -56,7 +54,7 @@ public class EmbeddedKafkaTest {
             }
         }
         try(Consumer<Long, String> consumer = kafka.createConsumer("test_group")) {
-            consumer.subscribe(Arrays.asList("test_topic_seek"));
+            consumer.subscribe(Collections.singletonList("test_topic_seek"));
             List<String> messages = kafka.consume(consumer, 1000L);
             assertFalse(messages.isEmpty());
             consumer.seekToBeginning(consumer.assignment());

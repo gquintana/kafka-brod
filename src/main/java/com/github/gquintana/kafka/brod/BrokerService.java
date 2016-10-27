@@ -1,15 +1,11 @@
 package com.github.gquintana.kafka.brod;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kafka.admin.AdminUtils;
-import kafka.server.ConfigType;
 import kafka.utils.ZkUtils;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -72,13 +68,13 @@ public class BrokerService {
             Broker jsonBroker = objectMapper.readValue(json, Broker.class);
             List<Endpoint> endpoints1 = jsonBroker.getEndpoints().stream().map(Endpoint::parse).collect(Collectors.toList());
             // Normalize Port
-            if (jsonBroker.getPort() != null && jsonBroker.getPort().intValue() > 0) {
+            if (jsonBroker.getPort() != null && jsonBroker.getPort() > 0) {
                 broker.setPort(jsonBroker.getPort());
             } else if (endpoints1.size() == 1){
                 broker.setPort(endpoints1.get(0).port);
             }
             // Normalize JMX Port
-            if (jsonBroker.getJmxPort() != null && jsonBroker.getJmxPort().intValue() > 0) {
+            if (jsonBroker.getJmxPort() != null && jsonBroker.getJmxPort() > 0) {
                 broker.setJmxPort(jsonBroker.getJmxPort());
             }
             // Normalize Host
@@ -99,7 +95,7 @@ public class BrokerService {
             broker.setEndpoints(jsonBroker.getEndpoints());
             Optional<Integer> controllerId = getController();
             if (controllerId.isPresent()) {
-                broker.setController(id == controllerId.get().intValue());
+                broker.setController(id == controllerId.get());
             }
             return broker;
         } catch (IOException e) {
