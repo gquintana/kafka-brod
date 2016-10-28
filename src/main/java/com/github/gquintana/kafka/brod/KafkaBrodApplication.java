@@ -13,7 +13,7 @@ import javax.ws.rs.ext.ContextResolver;
 import java.net.URI;
 
 public class KafkaBrodApplication implements AutoCloseable {
-    private String baseUri = "http://localhost:8080/kafka/";
+    private final Configuration configuration;
     private ObjectMapper objectMapper;
     private ZookeeperService zookeeperService;
     private BrokerService brokerService;
@@ -22,8 +22,15 @@ public class KafkaBrodApplication implements AutoCloseable {
     private HttpServer httpServer;
     private PartitionService partitionService;
 
+    public KafkaBrodApplication(Configuration configuration) {
+        this.configuration = configuration;
+    }
+
     public void run() throws Exception {
-        zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
+        zookeeperService = new ZookeeperService(
+            configuration.getAsString("zookeeper.servers").get(),
+            configuration.getAsInteger("zookeeper.sessionTimeout").get(),
+            configuration.getAsInteger("zookeeper.connectionTimeout").get());
 
         objectMapper();
 
@@ -33,7 +40,7 @@ public class KafkaBrodApplication implements AutoCloseable {
 
         resourceConfig();
 
-        httpServer();
+        httpServer(configuration.getAsString("http.baseUrl").get());
     }
 
     private ObjectMapper objectMapper() {
@@ -73,16 +80,12 @@ public class KafkaBrodApplication implements AutoCloseable {
         return resourceConfig;
     }
 
-    private HttpServer httpServer() {
+    private HttpServer httpServer(String baseUri) {
         // Grizzly uses JUL
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
         httpServer = GrizzlyHttpServerFactory.createHttpServer(URI.create(baseUri), resourceConfig);
         return httpServer;
-    }
-
-    public String baseUri() {
-        return baseUri;
     }
 
     public ZookeeperService zookeeperService() {
