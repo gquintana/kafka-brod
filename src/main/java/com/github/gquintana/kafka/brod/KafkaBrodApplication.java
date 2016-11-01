@@ -50,8 +50,7 @@ public class KafkaBrodApplication implements AutoCloseable {
         objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
-        objectMapper.configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false);
+        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, configuration.getAsBoolean("http.json.pretty").orElse(false));
         return objectMapper;
     }
 

@@ -73,4 +73,18 @@ public class Configuration {
     public Optional<Integer> getAsInteger(String key) {
         return get(key).map(Configuration::toInteger);
     }
+
+    private static Boolean toBoolean(Object obj) {
+        if (obj instanceof Boolean) {
+            return ((Boolean) obj);
+        } else if (obj instanceof String) {
+            return Boolean.parseBoolean((String) obj);
+        } else {
+            throw new KafkaBrodException("Can not convert to Boolean " + obj);
+        }
+    }
+
+    public Optional<Boolean> getAsBoolean(String key) {
+        return get(key).map(Configuration::toBoolean);
+    }
 }
