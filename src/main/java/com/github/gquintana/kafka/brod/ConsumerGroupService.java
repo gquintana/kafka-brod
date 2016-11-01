@@ -54,6 +54,7 @@ public class ConsumerGroupService implements AutoCloseable {
             .flatMap(e -> JavaConversions.asJavaCollection(e.getValue()).stream())
             .map(e -> e.groupId())
             .distinct()
+            .sorted()
             .collect(Collectors.toList());
     }
 
@@ -86,6 +87,7 @@ public class ConsumerGroupService implements AutoCloseable {
         ConsumerGroup group = convertToJson(groupId, groupSummary);
         List<com.github.gquintana.kafka.brod.Consumer> consumers = getConsumerSummaries(groupId).stream()
             .map(this::convertToJson)
+            .sorted(Comparator.comparing(com.github.gquintana.kafka.brod.Consumer::getMemberId))
             .collect(Collectors.toList());
         group.setMembers(consumers);
         List<ConsumerPartition> partitions = group.getMembers().stream().flatMap(m -> m.getPartitions().stream()).collect(Collectors.toList());
@@ -99,7 +101,9 @@ public class ConsumerGroupService implements AutoCloseable {
         group.setProtocol(groupSummary.protocol());
         group.setState(groupSummary.state());
         group.setMembers(JavaConversions.asJavaCollection(groupSummary.members()).stream()
-            .map(this::convertToJson).collect(Collectors.toList()));
+            .map(this::convertToJson)
+            .sorted(Comparator.comparing(com.github.gquintana.kafka.brod.Consumer::getMemberId))
+            .collect(Collectors.toList()));
         return group;
     }
 
@@ -110,6 +114,7 @@ public class ConsumerGroupService implements AutoCloseable {
         member.setMemberId(consumerSummary.memberId());
         member.setPartitions(JavaConversions.asJavaCollection(consumerSummary.assignment()).stream()
             .map(this::convertToJson)
+            .sorted(Comparator.comparing(ConsumerPartition::getTopicName).thenComparing(ConsumerPartition::getId))
             .collect(Collectors.toList()));
         return member;
     }

@@ -9,6 +9,7 @@ import org.apache.kafka.common.requests.MetadataResponse;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class TopicService {
     private final ZookeeperService zookeeperService;
@@ -49,6 +50,6 @@ public class TopicService {
     }
 
     public List<String> getTopics() {
-        return zookeeperService.getChildren("/brokers/topics");
+        return zookeeperService.getChildren("/brokers/topics").stream().sorted().collect(Collectors.toList());
     }
 }
