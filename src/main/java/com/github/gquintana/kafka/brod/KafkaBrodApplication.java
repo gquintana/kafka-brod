@@ -3,6 +3,7 @@ package com.github.gquintana.kafka.brod;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.logging.LoggingFeature;
@@ -21,6 +22,7 @@ public class KafkaBrodApplication implements AutoCloseable {
     private ResourceConfig resourceConfig;
     private HttpServer httpServer;
     private PartitionService partitionService;
+    private ConsumerGroupService consumerGroupService;
 
     public KafkaBrodApplication(Configuration configuration) {
         this.configuration = configuration;
@@ -37,6 +39,7 @@ public class KafkaBrodApplication implements AutoCloseable {
         brokerService = new BrokerService(zookeeperService, objectMapper);
         topicService = new TopicService(zookeeperService);
         partitionService = new PartitionService(zookeeperService);
+        consumerGroupService = new ConsumerGroupService(configuration.getAsString("kafka.servers").get());
 
         resourceConfig();
 
@@ -47,6 +50,8 @@ public class KafkaBrodApplication implements AutoCloseable {
         objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
+        objectMapper.configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false);
         return objectMapper;
     }
 
@@ -74,7 +79,8 @@ public class KafkaBrodApplication implements AutoCloseable {
 
         resourceConfig.registerInstances(
                 resources.brokersResource(),
-                resources.topicsResource());
+                resources.topicsResource(),
+                resources.consumerGroupsResource());
         resourceConfig.register(new ObjectMapperContextResolver(objectMapper));
         resourceConfig.register(LoggingFeature.class);
         return resourceConfig;
@@ -102,6 +108,10 @@ public class KafkaBrodApplication implements AutoCloseable {
 
     public PartitionService partitionService() {
         return partitionService;
+    }
+
+    public ConsumerGroupService consumerGroupService() {
+        return consumerGroupService;
     }
 
     @Override
