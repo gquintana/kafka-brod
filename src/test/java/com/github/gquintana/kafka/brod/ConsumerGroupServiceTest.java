@@ -26,7 +26,7 @@ public class ConsumerGroupServiceTest {
     @ClassRule
     public static final EmbeddedKafkaRule KAFKA_RULE = new EmbeddedKafkaRule(TEMPORARY_FOLDER);
     private static final String TOPIC = "test_group";
-    private static final int PARTITIONS = 2;
+    private static final int PARTITIONS = 3;
     private static ConsumerGroupService groupService;
     private static ZookeeperService zookeeperService;
     private static TopicService topicService;
@@ -78,6 +78,7 @@ public class ConsumerGroupServiceTest {
         assertThat(members.stream().map(ConsumerGroup.Member::getMemberId).distinct().collect(toList()).size(), is(2));
         assertThat(members.stream().map(ConsumerGroup.Member::getClientId).distinct().collect(toList()).size(), is(2));
         assertThat(members.stream().map(ConsumerGroup.Member::getClientHost).distinct().collect(toList()).size(), is(1));
+        assertThat(members.stream().flatMap(m -> m.getPartitions().stream()).collect(toList()).size(), is(3));
     }
 
     @After

@@ -11,10 +11,7 @@ import scala.Option;
 import scala.Predef;
 import scala.collection.JavaConversions;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ConsumerGroupService implements AutoCloseable {
@@ -34,12 +31,17 @@ public class ConsumerGroupService implements AutoCloseable {
         return adminClient;
     }
 
-    public List<String> getGroupIds() {
+    private Collection<GroupOverview> getGroupOverviews() {
         scala.collection.immutable.List<GroupOverview> groupOverviews = adminClient().listAllConsumerGroupsFlattened();
-        return JavaConversions.asJavaCollection(groupOverviews).stream()
+        return JavaConversions.asJavaCollection(groupOverviews);
+    }
+
+    public List<String> getGroupIds() {
+        return getGroupOverviews().stream()
             .map(cgo -> cgo.groupId())
             .collect(Collectors.toList());
     }
+
 
     public List<String> getGroupIds(int brokerId) {
         scala.collection.immutable.Map<Node, scala.collection.immutable.List<GroupOverview>> groupsByNode = adminClient().listAllConsumerGroups();
@@ -51,12 +53,37 @@ public class ConsumerGroupService implements AutoCloseable {
             .collect(Collectors.toList());
     }
 
+    private ConsumerGroup.Member convertToJson(MemberSummary member) {
+        ConsumerGroup.Member memberJson = new ConsumerGroup.Member();
+        memberJson.setClientId(member.clientId());
+        memberJson.setClientHost(member.clientHost());
+        memberJson.setMemberId(member.memberId());
+        return memberJson;
+    }
+
+    private GroupSummary getGroupSummary(String groupId) {
+        return adminClient().describeGroup(groupId);
+    }
+
+    private Collection<AdminClient.ConsumerSummary> getConsumerSummaries(String groupId) {
+        Option<scala.collection.immutable.List<AdminClient.ConsumerSummary>> consumerSummaries = adminClient().describeConsumerGroup(groupId);
+        if (consumerSummaries.isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            return JavaConversions.asJavaCollection(consumerSummaries.get());
+        }
+    }
+
     public Optional<ConsumerGroup> getGroup(String groupId) {
-        GroupSummary groupSummary = adminClient().describeGroup(groupId);
-        if ("Dead".equalsIgnoreCase(groupSummary.state())) {
+        GroupSummary groupSummary = getGroupSummary(groupId);
+        if ("dead".equalsIgnoreCase(groupSummary.state())) {
             return Optional.empty();
         }
         ConsumerGroup group = convertToJson(groupId, groupSummary);
+        List<ConsumerGroup.Member> consumers = getConsumerSummaries(groupId).stream()
+            .map(this::convertToJson)
+            .collect(Collectors.toList());
+        group.setMembers(consumers);
         return Optional.of(group);
     }
 
@@ -68,28 +95,6 @@ public class ConsumerGroupService implements AutoCloseable {
         group.setMembers(JavaConversions.asJavaCollection(groupSummary.members()).stream()
             .map(this::convertToJson).collect(Collectors.toList()));
         return group;
-    }
-
-    private ConsumerGroup.Member convertToJson(MemberSummary member) {
-        ConsumerGroup.Member memberJson = new ConsumerGroup.Member();
-        memberJson.setClientId(member.clientId());
-        memberJson.setClientHost(member.clientHost());
-        memberJson.setMemberId(member.memberId());
-        return memberJson;
-    }
-
-    public Optional<ConsumerGroup> getGroupWithAssignments(String groupId) {
-        Option<scala.collection.immutable.List<AdminClient.ConsumerSummary>> consumerSummaries = adminClient().describeConsumerGroup(groupId);
-        if (consumerSummaries.isEmpty()) {
-            return Optional.empty();
-        }
-        List<ConsumerGroup.Member> consumers = JavaConversions.asJavaCollection(consumerSummaries.get()).stream()
-            .map(this::convertToJson)
-            .collect(Collectors.toList());
-        ConsumerGroup group = new ConsumerGroup();
-        group.setGroupId(groupId);
-        group.setMembers(consumers);
-        return Optional.of(group);
     }
 
     private ConsumerGroup.Member convertToJson(AdminClient.ConsumerSummary consumerSummary) {
