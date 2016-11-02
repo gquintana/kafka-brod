@@ -11,7 +11,6 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import scala.Option;
 import scala.Predef;
 import scala.collection.JavaConversions;
 
@@ -71,11 +70,11 @@ public class ConsumerGroupService implements AutoCloseable {
     }
 
     private Collection<AdminClient.ConsumerSummary> getConsumerSummaries(String groupId) {
-        Option<scala.collection.immutable.List<AdminClient.ConsumerSummary>> consumerSummaries = adminClient().describeConsumerGroup(groupId);
+        scala.collection.immutable.List<AdminClient.ConsumerSummary> consumerSummaries = adminClient().describeConsumerGroup(groupId);
         if (consumerSummaries.isEmpty()) {
             return Collections.emptyList();
         } else {
-            return JavaConversions.asJavaCollection(consumerSummaries.get());
+            return JavaConversions.asJavaCollection(consumerSummaries);
         }
     }
 
@@ -161,10 +160,10 @@ public class ConsumerGroupService implements AutoCloseable {
         OffsetAndMetadata offsetAndMetadata = consumer.committed(topicPartition);
         long position = consumer.position(topicPartition);
         if (offsetAndMetadata !=null) {
-            partition.setTopicOffset(offsetAndMetadata.offset());
+            partition.setCommitedOffset(offsetAndMetadata.offset());
             partition.setMetadata(offsetAndMetadata.metadata());
         }
-        partition.setConsumerOffset(position);
+        partition.setCurrentOffset(position);
     }
 
     @Override

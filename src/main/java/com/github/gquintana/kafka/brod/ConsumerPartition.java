@@ -3,8 +3,8 @@ package com.github.gquintana.kafka.brod;
 public class ConsumerPartition {
     private String topicName;
     private int id;
-    private Long topicOffset;
-    private Long consumerOffset;
+    private Long commitedOffset;
+    private Long currentOffset;
     private String metadata;
 
     public ConsumerPartition() {
@@ -31,20 +31,20 @@ public class ConsumerPartition {
         this.id = id;
     }
 
-    public long getTopicOffset() {
-        return topicOffset;
+    public long getCommitedOffset() {
+        return commitedOffset;
     }
 
-    public void setTopicOffset(Long topicOffset) {
-        this.topicOffset = topicOffset;
+    public void setCommitedOffset(Long commitedOffset) {
+        this.commitedOffset = commitedOffset;
     }
 
-    public Long getConsumerOffset() {
-        return consumerOffset;
+    public Long getCurrentOffset() {
+        return currentOffset;
     }
 
-    public void setConsumerOffset(Long consumerOffset) {
-        this.consumerOffset = consumerOffset;
+    public void setCurrentOffset(Long currentOffset) {
+        this.currentOffset = currentOffset;
     }
 
     public String getMetadata() {
@@ -56,9 +56,9 @@ public class ConsumerPartition {
     }
 
     public Long getLag() {
-        if (topicOffset == null || consumerOffset == null) {
+        if (commitedOffset == null || currentOffset == null) {
             return null;
         }
-        return topicOffset - consumerOffset;
+        return currentOffset - commitedOffset;
     }
 }
