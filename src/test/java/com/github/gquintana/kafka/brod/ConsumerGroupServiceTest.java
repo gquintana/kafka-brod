@@ -26,6 +26,7 @@ public class ConsumerGroupServiceTest {
     @ClassRule
     public static final EmbeddedKafkaRule KAFKA_RULE = new EmbeddedKafkaRule(TEMPORARY_FOLDER);
     private static final String TOPIC = "test_group";
+    private static final String TOPIC2 = "test_group2";
     private static final int PARTITIONS = 3;
     private static ConsumerGroupService groupService;
     private static ZookeeperService zookeeperService;
@@ -38,13 +39,14 @@ public class ConsumerGroupServiceTest {
         zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
         topicService = new TopicService(zookeeperService);
         topicService.createTopic(new Topic(TOPIC, PARTITIONS, 1, new Properties()));
+        topicService.createTopic(new Topic(TOPIC2, PARTITIONS, 1, new Properties()));
         groupService = new ConsumerGroupService("localhost:9092");
     }
 
-    private Consumer startConsumer(String groupId) throws InterruptedException {
-        Consumer<Long, String> consumer = KAFKA_RULE.getKafka().createConsumer(groupId);
+    private Consumer startConsumer(String groupId, String ... topics) throws InterruptedException {
+        Consumer<Long, String> consumer = (Consumer<Long, String>) KAFKA_RULE.getKafka().createConsumer(groupId);
         TopicConsumerListener listener = new TopicConsumerListener();
-        TopicConsumerRunnable runnable = new TopicConsumerRunnable(groupId, TOPIC, listener);
+        TopicConsumerRunnable runnable = new TopicConsumerRunnable(groupId, topics, listener);
         executor.execute(runnable);
         listener.waitPartitionsAssigned();
         return consumer;
@@ -53,9 +55,9 @@ public class ConsumerGroupServiceTest {
     @Test
     public void testGetGroupIds() throws Exception {
         // Given
-        startConsumer("get_group_id_1");
-        startConsumer("get_group_id_1");
-        startConsumer("get_group_id_2");
+        startConsumer("get_group_id_1", TOPIC);
+        startConsumer("get_group_id_1", TOPIC);
+        startConsumer("get_group_id_2", TOPIC);
         // When
         List<String> groupIds = groupService.getGroupIds();
         // Then
@@ -65,8 +67,8 @@ public class ConsumerGroupServiceTest {
     @Test
     public void testGetGroup() throws Exception {
         // Given
-        startConsumer("get_group");
-        startConsumer("get_group");
+        startConsumer("get_group", TOPIC);
+        startConsumer("get_group", TOPIC);
         // When
         Optional<ConsumerGroup> group = groupService.getGroup("get_group");
         // Then
@@ -79,6 +81,28 @@ public class ConsumerGroupServiceTest {
         assertThat(members.stream().map(com.github.gquintana.kafka.brod.Consumer::getClientId).distinct().collect(toList()).size(), is(2));
         assertThat(members.stream().map(com.github.gquintana.kafka.brod.Consumer::getClientHost).distinct().collect(toList()).size(), is(1));
         assertThat(members.stream().flatMap(m -> m.getPartitions().stream()).collect(toList()).size(), is(3));
+    }
+
+    @Test
+    public void testGetGroup_ByTopic() throws Exception {
+        // Given
+        startConsumer("get_group_by_topic", TOPIC, TOPIC2);
+        // When
+        Optional<ConsumerGroup> group = groupService.getGroup("get_group_by_topic");
+        // Then
+        assertThat(group.isPresent(), is(true));
+        assertThat(group.get().getGroupId(), equalTo("get_group_by_topic"));
+        List<com.github.gquintana.kafka.brod.Consumer> members = group.get().getMembers();
+        assertThat(members.size(), is(1));
+        assertThat(members.stream().flatMap(m -> m.getPartitions().stream()).collect(toList()).size(), is(3*2));
+        // When
+        group = groupService.getGroup("get_group_by_topic", TOPIC);
+        // Then
+        assertThat(group.isPresent(), is(true));
+        assertThat(group.get().getGroupId(), equalTo("get_group_by_topic"));
+        members = group.get().getMembers();
+        assertThat(members.size(), is(1));
+        assertThat(members.stream().flatMap(m -> m.getPartitions().stream()).collect(toList()).size(), is(3*1));
     }
 
     @After
@@ -98,10 +122,10 @@ public class ConsumerGroupServiceTest {
         private final TopicConsumerListener listener;
         private final Consumer<Long, String> consumer;
 
-        public TopicConsumerRunnable(String groupId, String topic, TopicConsumerListener listener) {
+        public TopicConsumerRunnable(String groupId, String[] topics, TopicConsumerListener listener) {
             this.listener = listener;
-            consumer = KAFKA_RULE.getKafka().createConsumer(groupId);
-            consumer.subscribe(Collections.singletonList(topic), this.listener);
+            consumer = (Consumer<Long, String>) KAFKA_RULE.getKafka().createConsumer(groupId);
+            consumer.subscribe(Arrays.asList(topics), this.listener);
         }
 
         @Override

@@ -80,13 +80,21 @@ public class ConsumerGroupService implements AutoCloseable {
     }
 
     public Optional<ConsumerGroup> getGroup(String groupId) {
+        return getGroup(groupId, null);
+    }
+
+    /**
+     *
+     * @param topic Optional topic name to filter assignments
+     */
+    public Optional<ConsumerGroup> getGroup(String groupId, String topic) {
         GroupSummary groupSummary = getGroupSummary(groupId);
         if ("dead".equalsIgnoreCase(groupSummary.state())) {
             return Optional.empty();
         }
         ConsumerGroup group = convertToJson(groupId, groupSummary);
         List<com.github.gquintana.kafka.brod.Consumer> consumers = getConsumerSummaries(groupId).stream()
-            .map(this::convertToJson)
+            .map(c -> convertToJson(c, topic))
             .sorted(Comparator.comparing(com.github.gquintana.kafka.brod.Consumer::getMemberId))
             .collect(Collectors.toList());
         group.setMembers(consumers);
@@ -107,12 +115,13 @@ public class ConsumerGroupService implements AutoCloseable {
         return group;
     }
 
-    private com.github.gquintana.kafka.brod.Consumer convertToJson(AdminClient.ConsumerSummary consumerSummary) {
+    private com.github.gquintana.kafka.brod.Consumer convertToJson(AdminClient.ConsumerSummary consumerSummary, String topic) {
         com.github.gquintana.kafka.brod.Consumer member = new com.github.gquintana.kafka.brod.Consumer();
         member.setClientId(consumerSummary.clientId());
         member.setClientHost(consumerSummary.clientHost());
         member.setMemberId(consumerSummary.memberId());
         member.setPartitions(JavaConversions.asJavaCollection(consumerSummary.assignment()).stream()
+            .filter(tp -> topic == null || tp.topic().equals(topic))
             .map(this::convertToJson)
             .sorted(Comparator.comparing(ConsumerPartition::getTopicName).thenComparing(ConsumerPartition::getId))
             .collect(Collectors.toList()));
@@ -151,8 +160,10 @@ public class ConsumerGroupService implements AutoCloseable {
         TopicPartition topicPartition = new TopicPartition(partition.getTopicName(), partition.getId());
         OffsetAndMetadata offsetAndMetadata = consumer.committed(topicPartition);
         long position = consumer.position(topicPartition);
-        partition.setTopicOffset(offsetAndMetadata.offset());
-        partition.setMetadata(offsetAndMetadata.metadata());
+        if (offsetAndMetadata !=null) {
+            partition.setTopicOffset(offsetAndMetadata.offset());
+            partition.setMetadata(offsetAndMetadata.metadata());
+        }
         partition.setConsumerOffset(position);
     }
 

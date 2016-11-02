@@ -2,6 +2,7 @@ package com.github.gquintana.kafka.brod;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -19,10 +20,11 @@ public class ConsumerGroupResource {
 
     /**
      * Get consumer group detailed info
+     * @param topic Optional topic name to filter assigned topics
      */
     @GET
-    public Response getGroup() {
-        return Responses.of(groupService.getGroup(groupId));
+    public Response getGroup(@QueryParam("topic") String topic) {
+        return Responses.of(groupService.getGroup(groupId, topic));
     }
 
 }
