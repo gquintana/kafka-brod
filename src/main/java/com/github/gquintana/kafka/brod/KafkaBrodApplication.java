@@ -100,6 +100,7 @@ public class KafkaBrodApplication implements AutoCloseable {
             resourceConfig.register(RolesAllowedDynamicFeature.class);
         }
 
+        resourceConfig.register(RuntimeExceptionMapper.class);
         resourceConfig.registerInstances(
                 resources.brokersResource(),
                 resources.topicsResource(),
