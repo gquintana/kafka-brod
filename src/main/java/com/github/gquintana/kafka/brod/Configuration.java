@@ -11,6 +11,13 @@ import java.util.stream.Collectors;
 public class Configuration {
     private final Map<String, Object> config = new HashMap<>();
 
+    public Configuration() {
+    }
+
+    public Configuration(Map<String, Object> config) {
+        this.config.putAll(config);
+    }
+
     public void loadSystem() throws IOException {
         setProperties(System.getProperties());
     }
@@ -70,6 +77,7 @@ public class Configuration {
             throw new KafkaBrodException("Can not convert to Integer " + obj);
         }
     }
+
     public Optional<Integer> getAsInteger(String key) {
         return get(key).map(Configuration::toInteger);
     }
@@ -86,5 +94,34 @@ public class Configuration {
 
     public Optional<Boolean> getAsBoolean(String key) {
         return get(key).map(Configuration::toBoolean);
+    }
+
+    private static Class toClass(Object obj) {
+        if (obj instanceof Class) {
+            return ((Class) obj);
+        } else if (obj instanceof String) {
+            try {
+                return (Class) Class.forName((String) obj);
+            } catch (ClassNotFoundException e) {
+                throw new KafkaBrodException("Can not convert to Class " + obj, e);
+            }
+        } else {
+            throw new KafkaBrodException("Can not convert to Class " + obj);
+        }
+    }
+
+    public Optional<Class> getAsClass(String key) {
+        return get(key).map(Configuration::toClass);
+    }
+
+    public Configuration getAsConfiguration(String key) {
+        String prefix = key + ".";
+        Map<String, Object> subConfig = config.entrySet().stream()
+            .filter(e -> e.getKey().startsWith(prefix))
+            .collect(Collectors.toMap(
+                e -> e.getKey().substring(prefix.length()),
+                e -> e.getValue()
+            ));
+        return new Configuration(subConfig);
     }
 }

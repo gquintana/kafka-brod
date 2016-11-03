@@ -1,11 +1,10 @@
 package com.github.gquintana.kafka.brod;
 
+import com.github.gquintana.kafka.brod.security.FileBasedSecurityService;
 import org.junit.Test;
 
-import java.io.IOException;
-
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class ConfigurationTest {
 
@@ -29,5 +28,39 @@ public class ConfigurationTest {
         int zookeeperServers = configuration.getAsInteger("zookeeper.sessionTimeout").get();
         // Then
         assertThat(3000, equalTo(zookeeperServers));
+    }
+
+    @Test
+    public void testLoadAndGetBoolean() throws Exception {
+        // Given
+        Configuration configuration = new Configuration();
+        // When
+        configuration.load("brod.properties");
+        boolean httpJsonPretty = configuration.getAsBoolean("http.json.pretty").get();
+        // Then
+        assertThat(httpJsonPretty, is(true));
+    }
+
+    @Test
+    public void testLoadAndGetConfiguration() throws Exception {
+        // Given
+        Configuration configuration = new Configuration();
+        // When
+        configuration.load("brod.properties");
+        Configuration securityConfig = configuration.getAsConfiguration("http.security");
+        // Then
+        assertThat(securityConfig, notNullValue());
+        assertThat(securityConfig.getAsBoolean("basicAuth.enabled").get(), notNullValue());
+    }
+
+    @Test
+    public void testLoadAndClass() throws Exception {
+        // Given
+        Configuration configuration = new Configuration();
+        // When
+        configuration.load("brod.properties");
+        Class securityServiceClass = configuration.getAsClass("http.security.service.class").get();
+        // Then
+        assertThat(securityServiceClass, equalTo(FileBasedSecurityService.class));
     }
 }

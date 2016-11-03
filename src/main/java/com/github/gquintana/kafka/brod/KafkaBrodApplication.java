@@ -4,16 +4,24 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.github.gquintana.kafka.brod.security.BasicAuthRequestFilter;
+import com.github.gquintana.kafka.brod.security.FileBasedSecurityService;
+import com.github.gquintana.kafka.brod.security.SecurityService;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.ws.rs.ext.ContextResolver;
+import java.lang.reflect.Constructor;
 import java.net.URI;
 
 public class KafkaBrodApplication implements AutoCloseable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaBrodApplication.class);
     private final Configuration configuration;
     private ObjectMapper objectMapper;
     private ZookeeperService zookeeperService;
@@ -23,6 +31,7 @@ public class KafkaBrodApplication implements AutoCloseable {
     private HttpServer httpServer;
     private PartitionService partitionService;
     private ConsumerGroupService consumerGroupService;
+    private SecurityService securityService;
 
     public KafkaBrodApplication(Configuration configuration) {
         this.configuration = configuration;
@@ -36,6 +45,14 @@ public class KafkaBrodApplication implements AutoCloseable {
 
         objectMapper();
 
+        try {
+            Class<? extends SecurityService> securityServiceClass = configuration.getAsClass("http.security.service.class")
+                .orElse(FileBasedSecurityService.class);
+            Constructor<? extends SecurityService> securityServiceCtor = securityServiceClass.getConstructor(Configuration.class);
+            securityService = securityServiceCtor.newInstance(configuration.getAsConfiguration("http.security"));
+        } catch (ReflectiveOperationException e) {
+            securityService = null;
+        }
         brokerService = new BrokerService(zookeeperService, objectMapper);
         topicService = new TopicService(zookeeperService);
         partitionService = new PartitionService(zookeeperService);
@@ -75,6 +92,13 @@ public class KafkaBrodApplication implements AutoCloseable {
 
 
         Resources resources = new Resources(this);
+
+        if (configuration.getAsBoolean("http.security.basicAuth.enabled").orElse(false) && securityService != null) {
+            LOGGER.info("Basic Auth security enabled with service {}", securityService.getClass().getSimpleName());
+            BasicAuthRequestFilter filter = new BasicAuthRequestFilter("UTF-8", securityService);
+            resourceConfig.register(filter);
+            resourceConfig.register(RolesAllowedDynamicFeature.class);
+        }
 
         resourceConfig.registerInstances(
                 resources.brokersResource(),

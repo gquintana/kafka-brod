@@ -2,7 +2,10 @@ package com.github.gquintana.kafka.brod;
 
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
-import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.LongDeserializer;
@@ -86,7 +89,7 @@ public class EmbeddedKafka {
         }
     }
 
-    public Consumer<Long, String> createConsumer(String groupId) {
+    public org.apache.kafka.clients.consumer.Consumer<Long, String> createConsumer(String groupId) {
         Map<String, Object> consumerConfig = new HashMap<>();
         consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + port);
         consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
@@ -98,13 +101,13 @@ public class EmbeddedKafka {
         return new KafkaConsumer<>(consumerConfig);
     }
     public List<String> consume(String topic, String groupId, long timeout) {
-        try (Consumer<Long, String> consumer = createConsumer(groupId)) {
+        try (org.apache.kafka.clients.consumer.Consumer<Long, String> consumer = createConsumer(groupId)) {
             consumer.subscribe(Collections.singletonList(topic));
             return consume(consumer, timeout);
         }
     }
 
-    public List<String> consume(Consumer<Long, String> consumer, long pollTimeout) {
+    public List<String> consume(org.apache.kafka.clients.consumer.Consumer<Long, String> consumer, long pollTimeout) {
         LOGGER.info("Consuming Kafka messages");
         List<String> messages = new ArrayList<>();
         long end = System.currentTimeMillis() + pollTimeout;
@@ -137,7 +140,7 @@ public class EmbeddedKafka {
         consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
         consumerConfig.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
-        try (Consumer<Long, String> consumer = new KafkaConsumer<>(consumerConfig)) {
+        try (org.apache.kafka.clients.consumer.Consumer<Long, String> consumer = new KafkaConsumer<>(consumerConfig)) {
             consumer.subscribe(Collections.singletonList(topic));
             Set<TopicPartition> topicPartitions = null;
             while(topicPartitions ==null) {
