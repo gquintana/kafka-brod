@@ -1,5 +1,7 @@
 package com.github.gquintana.kafka.brod;
 
+import com.github.gquintana.kafka.brod.cache.Cache;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -23,6 +25,7 @@ public class BrokersResource {
      * Get broker detailed info
      */
     @GET
+    @Cache("max-age=60")
     public List<Integer> getBrokers() {
         return brokerService.getBrokers();
     }
