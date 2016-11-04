@@ -11,6 +11,7 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import scala.Option;
 import scala.Predef;
 import scala.collection.JavaConversions;
 
@@ -70,11 +71,11 @@ public class ConsumerGroupService implements AutoCloseable {
     }
 
     private Collection<AdminClient.ConsumerSummary> getConsumerSummaries(String groupId) {
-        scala.collection.immutable.List<AdminClient.ConsumerSummary> consumerSummaries = adminClient().describeConsumerGroup(groupId);
+        Option<scala.collection.immutable.List<AdminClient.ConsumerSummary>> consumerSummaries = adminClient().describeConsumerGroup(groupId);
         if (consumerSummaries.isEmpty()) {
             return Collections.emptyList();
         } else {
-            return JavaConversions.asJavaCollection(consumerSummaries);
+            return JavaConversions.asJavaCollection(consumerSummaries.get());
         }
     }
 
