@@ -3,11 +3,14 @@ package com.github.gquintana.kafka.brod.broker;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.gquintana.kafka.brod.KafkaBrodException;
 import com.github.gquintana.kafka.brod.ZookeeperService;
+import kafka.admin.AdminUtils;
+import kafka.server.ConfigType;
 import kafka.utils.ZkUtils;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -61,7 +64,10 @@ public class BrokerService {
         if (json == null) {
             return Optional.empty();
         }
-        return Optional.of(parseBroker(id, json));
+        Broker broker = parseBroker(id, json);
+        Properties properties = AdminUtils.fetchEntityConfig(getZkUtils(), ConfigType.Broker(), Integer.toString(id));
+        broker.setConfig(properties);
+        return Optional.of(broker);
     }
 
     Broker parseBroker(int id, String json) {

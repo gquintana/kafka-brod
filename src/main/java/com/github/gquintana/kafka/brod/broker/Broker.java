@@ -1,6 +1,7 @@
 package com.github.gquintana.kafka.brod.broker;
 
 import java.util.List;
+import java.util.Properties;
 
 public class Broker {
     private int id;
@@ -10,6 +11,7 @@ public class Broker {
     private Integer jmxPort;
     private List<String> endpoints;
     private Boolean controller;
+    private Properties config;
 
     public Broker() {
     }
@@ -72,5 +74,13 @@ public class Broker {
 
     public void setController(Boolean controller) {
         this.controller = controller;
+    }
+
+    public Properties getConfig() {
+        return config;
+    }
+
+    public void setConfig(Properties config) {
+        this.config = config;
     }
 }
