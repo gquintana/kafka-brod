@@ -1,5 +1,7 @@
-package com.github.gquintana.kafka.brod;
+package com.github.gquintana.kafka.brod.topic;
 
+import com.github.gquintana.kafka.brod.EmbeddedKafkaRule;
+import com.github.gquintana.kafka.brod.ZookeeperService;
 import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

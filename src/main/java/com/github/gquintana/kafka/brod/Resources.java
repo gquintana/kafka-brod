@@ -1,5 +1,12 @@
 package com.github.gquintana.kafka.brod;
 
+import com.github.gquintana.kafka.brod.broker.BrokersResource;
+import com.github.gquintana.kafka.brod.consumer.ConsumerGroupResource;
+import com.github.gquintana.kafka.brod.consumer.ConsumerGroupsResource;
+import com.github.gquintana.kafka.brod.topic.PartitionsResource;
+import com.github.gquintana.kafka.brod.topic.TopicResource;
+import com.github.gquintana.kafka.brod.topic.TopicsResource;
+
 public class Resources {
     private final KafkaBrodApplication application;
     private final BrokersResource brokersResource;

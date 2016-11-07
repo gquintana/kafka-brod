@@ -1,4 +1,4 @@
-package com.github.gquintana.kafka.brod;
+package com.github.gquintana.kafka.brod.broker;
 
 import java.util.List;
 

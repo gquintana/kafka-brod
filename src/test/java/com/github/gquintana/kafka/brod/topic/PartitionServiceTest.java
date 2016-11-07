@@ -1,8 +1,10 @@
-package com.github.gquintana.kafka.brod;
+package com.github.gquintana.kafka.brod.topic;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.github.gquintana.kafka.brod.EmbeddedKafkaRule;
+import com.github.gquintana.kafka.brod.ZookeeperService;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;

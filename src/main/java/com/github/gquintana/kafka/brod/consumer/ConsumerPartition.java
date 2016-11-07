@@ -1,4 +1,4 @@
-package com.github.gquintana.kafka.brod;
+package com.github.gquintana.kafka.brod.consumer;
 
 public class ConsumerPartition {
     private String topicName;

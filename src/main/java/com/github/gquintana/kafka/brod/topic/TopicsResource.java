@@ -1,4 +1,6 @@
-package com.github.gquintana.kafka.brod;
+package com.github.gquintana.kafka.brod.topic;
+
+import com.github.gquintana.kafka.brod.Resources;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

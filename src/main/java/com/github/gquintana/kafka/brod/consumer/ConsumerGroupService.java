@@ -1,4 +1,4 @@
-package com.github.gquintana.kafka.brod;
+package com.github.gquintana.kafka.brod.consumer;
 
 import kafka.admin.AdminClient;
 import kafka.coordinator.GroupOverview;
@@ -58,8 +58,8 @@ public class ConsumerGroupService implements AutoCloseable {
             .collect(Collectors.toList());
     }
 
-    private com.github.gquintana.kafka.brod.Consumer convertToJson(MemberSummary member) {
-        com.github.gquintana.kafka.brod.Consumer memberJson = new com.github.gquintana.kafka.brod.Consumer();
+    private com.github.gquintana.kafka.brod.consumer.Consumer convertToJson(MemberSummary member) {
+        com.github.gquintana.kafka.brod.consumer.Consumer memberJson = new com.github.gquintana.kafka.brod.consumer.Consumer();
         memberJson.setClientId(member.clientId());
         memberJson.setClientHost(member.clientHost());
         memberJson.setMemberId(member.memberId());
@@ -93,9 +93,9 @@ public class ConsumerGroupService implements AutoCloseable {
             return Optional.empty();
         }
         ConsumerGroup group = convertToJson(groupId, groupSummary);
-        List<com.github.gquintana.kafka.brod.Consumer> consumers = getConsumerSummaries(groupId).stream()
+        List<com.github.gquintana.kafka.brod.consumer.Consumer> consumers = getConsumerSummaries(groupId).stream()
             .map(c -> convertToJson(c, topic))
-            .sorted(Comparator.comparing(com.github.gquintana.kafka.brod.Consumer::getMemberId))
+            .sorted(Comparator.comparing(com.github.gquintana.kafka.brod.consumer.Consumer::getMemberId))
             .collect(Collectors.toList());
         group.setMembers(consumers);
         List<ConsumerPartition> partitions = group.getMembers().stream().flatMap(m -> m.getPartitions().stream()).collect(Collectors.toList());
@@ -110,13 +110,13 @@ public class ConsumerGroupService implements AutoCloseable {
         group.setState(groupSummary.state());
         group.setMembers(JavaConversions.asJavaCollection(groupSummary.members()).stream()
             .map(this::convertToJson)
-            .sorted(Comparator.comparing(com.github.gquintana.kafka.brod.Consumer::getMemberId))
+            .sorted(Comparator.comparing(com.github.gquintana.kafka.brod.consumer.Consumer::getMemberId))
             .collect(Collectors.toList()));
         return group;
     }
 
-    private com.github.gquintana.kafka.brod.Consumer convertToJson(AdminClient.ConsumerSummary consumerSummary, String topic) {
-        com.github.gquintana.kafka.brod.Consumer member = new com.github.gquintana.kafka.brod.Consumer();
+    private com.github.gquintana.kafka.brod.consumer.Consumer convertToJson(AdminClient.ConsumerSummary consumerSummary, String topic) {
+        com.github.gquintana.kafka.brod.consumer.Consumer member = new com.github.gquintana.kafka.brod.consumer.Consumer();
         member.setClientId(consumerSummary.clientId());
         member.setClientHost(consumerSummary.clientHost());
         member.setMemberId(consumerSummary.memberId());

@@ -1,5 +1,6 @@
-package com.github.gquintana.kafka.brod;
+package com.github.gquintana.kafka.brod.topic;
 
+import com.github.gquintana.kafka.brod.ZookeeperService;
 import kafka.admin.AdminUtils;
 import kafka.utils.ZkUtils;
 import org.apache.kafka.common.Node;

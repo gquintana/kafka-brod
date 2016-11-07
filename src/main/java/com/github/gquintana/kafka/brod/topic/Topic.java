@@ -1,4 +1,4 @@
-package com.github.gquintana.kafka.brod;
+package com.github.gquintana.kafka.brod.topic;
 
 import java.util.Properties;
 

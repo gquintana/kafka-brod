@@ -1,5 +1,7 @@
-package com.github.gquintana.kafka.brod;
+package com.github.gquintana.kafka.brod.broker;
 
+import com.github.gquintana.kafka.brod.Resources;
+import com.github.gquintana.kafka.brod.Responses;
 import com.github.gquintana.kafka.brod.cache.Cache;
 
 import javax.ws.rs.GET;

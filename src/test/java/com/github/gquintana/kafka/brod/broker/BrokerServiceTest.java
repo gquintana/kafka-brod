@@ -1,8 +1,10 @@
-package com.github.gquintana.kafka.brod;
+package com.github.gquintana.kafka.brod.broker;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.github.gquintana.kafka.brod.EmbeddedKafkaRule;
+import com.github.gquintana.kafka.brod.ZookeeperService;
 import org.hamcrest.Matchers;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -12,7 +14,7 @@ import org.junit.rules.TemporaryFolder;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class BrokerServiceTest {
 

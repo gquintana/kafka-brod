@@ -1,6 +1,8 @@
-package com.github.gquintana.kafka.brod;
+package com.github.gquintana.kafka.brod.broker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.gquintana.kafka.brod.KafkaBrodException;
+import com.github.gquintana.kafka.brod.ZookeeperService;
 import kafka.utils.ZkUtils;
 
 import java.io.IOException;
