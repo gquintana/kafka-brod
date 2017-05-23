@@ -12,18 +12,14 @@ import com.github.gquintana.kafka.brod.security.FileBasedSecurityService;
 import com.github.gquintana.kafka.brod.security.SecurityService;
 import com.github.gquintana.kafka.brod.topic.PartitionService;
 import com.github.gquintana.kafka.brod.topic.TopicService;
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.ws.rs.ext.ContextResolver;
 import java.lang.reflect.Constructor;
-import java.net.URI;
 
 public class KafkaBrodApplication implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaBrodApplication.class);
@@ -33,7 +29,7 @@ public class KafkaBrodApplication implements AutoCloseable {
     private BrokerService brokerService;
     private TopicService topicService;
     private ResourceConfig resourceConfig;
-    private HttpServer httpServer;
+    private JerseyServer jerseyServer;
     private PartitionService partitionService;
     private ConsumerGroupService consumerGroupService;
     private SecurityService securityService;
@@ -53,8 +49,7 @@ public class KafkaBrodApplication implements AutoCloseable {
         try {
             Class<? extends SecurityService> securityServiceClass = configuration.getAsClass("http.security.service.class")
                 .orElse(FileBasedSecurityService.class);
-            Constructor<? extends SecurityService> securityServiceCtor = securityServiceClass.getConstructor(Configuration.class);
-            securityService = securityServiceCtor.newInstance(configuration.getAsConfiguration("http.security"));
+            securityService = instantiate(securityServiceClass, new Class[]{Configuration.class}, new Object[]{configuration.getAsConfiguration("http.security")});
         } catch (ReflectiveOperationException e) {
             securityService = null;
         }
@@ -65,7 +60,17 @@ public class KafkaBrodApplication implements AutoCloseable {
 
         resourceConfig();
 
-        httpServer(configuration.getAsString("http.baseUrl").get());
+        jerseyServer().run();
+    }
+
+    private JerseyServer jerseyServer() throws ReflectiveOperationException {
+        Class<? extends JerseyServer> httpServerClass = configuration.getAsClass("http.server.class")
+            .orElse(Class.forName("com.github.gquintana.kafka.brod.NettyJerseyServer"));
+
+        jerseyServer = instantiate(httpServerClass,
+            new Class[]{String.class, ResourceConfig.class},
+            new Object[]{configuration.getAsString("http.server.baseUrl").get(), resourceConfig});
+        return jerseyServer;
     }
 
     private ObjectMapper objectMapper() {
@@ -119,14 +124,6 @@ public class KafkaBrodApplication implements AutoCloseable {
         return resourceConfig;
     }
 
-    private HttpServer httpServer(String baseUri) {
-        // Grizzly uses JUL
-        SLF4JBridgeHandler.removeHandlersForRootLogger();
-        SLF4JBridgeHandler.install();
-        httpServer = GrizzlyHttpServerFactory.createHttpServer(URI.create(baseUri), resourceConfig);
-        return httpServer;
-    }
-
     public ZookeeperService zookeeperService() {
         return zookeeperService;
     }
@@ -152,8 +149,13 @@ public class KafkaBrodApplication implements AutoCloseable {
         if (zookeeperService != null) {
             zookeeperService.close();
         }
-        if (httpServer != null) {
-            httpServer.shutdownNow();
+        if (jerseyServer != null) {
+            jerseyServer.close();
         }
+    }
+
+    private <T> T instantiate(Class<T> clazz, Class[] argClasses, Object[] argValues) throws ReflectiveOperationException {
+        Constructor<? extends T> objectCtor = clazz.getConstructor(argClasses);
+        return objectCtor.newInstance(argValues);
     }
 }
