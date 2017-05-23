@@ -13,7 +13,7 @@
         <jackson.version>1.7.21</jackson.version>
         <slf4j.version>1.7.21</slf4j.version>
         <jersey.version>2.23.2</jersey.version>
-      <kafka.version>0.10.1.0</kafka.version>
+      <kafka.version>0.10.2.1</kafka.version>
     </properties>
     <dependencies>
         <dependency>
@@ -34,7 +34,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.11</artifactId>
+            <artifactId>kafka_2.12</artifactId>
             <version>${kafka.version}</version>
         </dependency>
         <dependency>
