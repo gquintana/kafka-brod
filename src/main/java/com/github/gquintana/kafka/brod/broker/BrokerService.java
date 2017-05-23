@@ -7,7 +7,11 @@ import kafka.admin.AdminUtils;
 import kafka.server.ConfigType;
 import kafka.utils.ZkUtils;
 
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -21,10 +25,12 @@ import java.util.stream.Collectors;
 public class BrokerService {
     private final ZookeeperService zookeeperService;
     private final ObjectMapper objectMapper;
+    private final int connectionTimeout;
 
-    public BrokerService(ZookeeperService zookeeperService, ObjectMapper objectMapper) {
+    public BrokerService(ZookeeperService zookeeperService, ObjectMapper objectMapper, int connectionTimeout) {
         this.zookeeperService = zookeeperService;
         this.objectMapper = objectMapper;
+        this.connectionTimeout = connectionTimeout;
     }
 
     private ZkUtils getZkUtils() {
@@ -105,6 +111,10 @@ public class BrokerService {
             if (controllerId.isPresent()) {
                 broker.setController(id == controllerId.get());
             }
+            if (broker.getHost() != null && broker.getPort() != null) {
+                boolean ssl = broker.getProtocol() != null && broker.getProtocol().contains("SSL");
+                broker.setAvailable(isAvailable(broker.getHost(), broker.getPort(), ssl, connectionTimeout));
+            }
             return broker;
         } catch (IOException e) {
             throw new KafkaBrodException("Failed to read or parse broker info", e);
@@ -143,6 +153,19 @@ public class BrokerService {
             return Optional.of(controller.getBrokerid());
         } catch (IOException e) {
             throw new KafkaBrodException("Failed to read or parse controller info", e);
+        }
+    }
+
+    /**
+     * Try to open a socket on broker to tes whether it is running
+     */
+    private static boolean isAvailable(String host, int port, boolean ssl, int connectTimeout) {
+        SocketFactory socketFactory = ssl ? SSLSocketFactory.getDefault() : SocketFactory.getDefault();
+        try(Socket socket = socketFactory.createSocket()) {
+            socket.connect(new InetSocketAddress(host, port), connectTimeout);
+            return socket.isConnected();
+        } catch (IOException e) {
+            return false;
         }
     }
 }

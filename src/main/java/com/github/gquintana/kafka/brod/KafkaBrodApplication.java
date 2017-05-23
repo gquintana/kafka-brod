@@ -58,7 +58,7 @@ public class KafkaBrodApplication implements AutoCloseable {
         } catch (ReflectiveOperationException e) {
             securityService = null;
         }
-        brokerService = new BrokerService(zookeeperService, objectMapper);
+        brokerService = new BrokerService(zookeeperService, objectMapper, configuration.getAsInteger("kafka.connectionTimeout").orElse(1000));
         topicService = new TopicService(zookeeperService);
         partitionService = new PartitionService(zookeeperService);
         consumerGroupService = new ConsumerGroupService(configuration.getAsString("kafka.servers").get());

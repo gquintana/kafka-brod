@@ -12,6 +12,7 @@ public class Broker {
     private List<String> endpoints;
     private Boolean controller;
     private Properties config;
+    private Boolean available;
 
     public Broker() {
     }
@@ -82,5 +83,13 @@ public class Broker {
 
     public void setConfig(Properties config) {
         this.config = config;
+    }
+
+    public Boolean getAvailable() {
+        return available;
+    }
+
+    public void setAvailable(Boolean available) {
+        this.available = available;
     }
 }

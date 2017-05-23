@@ -34,7 +34,7 @@ public class BrokerServiceTest {
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        brokerService = new BrokerService(zookeeperService, objectMapper);
+        brokerService = new BrokerService(zookeeperService, objectMapper, 1000);
     }
 
     @Test
@@ -95,6 +95,7 @@ public class BrokerServiceTest {
         assertThat(broker.getPort(), equalTo(9092));
         assertThat(broker.getEndpoints().size(), equalTo(1));
         assertThat(broker.getController().booleanValue(), is(true));
+        assertThat(broker.getAvailable().booleanValue(), is(true));
 
     }
 
