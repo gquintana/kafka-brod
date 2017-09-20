@@ -1,8 +1,8 @@
 package com.github.gquintana.kafka.brod.consumer;
 
 import kafka.admin.AdminClient;
-import kafka.coordinator.GroupOverview;
-import kafka.coordinator.MemberSummary;
+import kafka.coordinator.group.GroupOverview;
+import kafka.coordinator.group.MemberSummary;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ConsumerGroupService implements AutoCloseable {
+    private static final long TIMEOUT_MS = 10000L;
     private final String bootstrapServers;
     private AdminClient adminClient;
 
@@ -25,7 +26,7 @@ public class ConsumerGroupService implements AutoCloseable {
         this.bootstrapServers = bootstrapServers;
     }
 
-    public AdminClient adminClient() {
+    public synchronized AdminClient adminClient() {
         if (adminClient == null) {
             Map<String, Object> brokerConfig = new HashMap<>();
             brokerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -66,11 +67,12 @@ public class ConsumerGroupService implements AutoCloseable {
     }
 
     private AdminClient.ConsumerGroupSummary getGroupSummary(String groupId) {
-        return adminClient().describeConsumerGroup(groupId);
+        return adminClient().describeConsumerGroup(groupId, TIMEOUT_MS);
     }
 
     private Collection<AdminClient.ConsumerSummary> getConsumerSummaries(String groupId) {
-        Option<scala.collection.immutable.List<AdminClient.ConsumerSummary>> consumerSummaries = adminClient().describeConsumerGroup(groupId).consumers();
+        Option<scala.collection.immutable.List<AdminClient.ConsumerSummary>> consumerSummaries =
+            getGroupSummary(groupId).consumers();
         if (consumerSummaries.isEmpty()) {
             return Collections.emptyList();
         } else {

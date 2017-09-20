@@ -55,7 +55,7 @@ public class EmbeddedKafkaTest {
         }
         try(Consumer<Long, String> consumer = kafka.createConsumer("test_group")) {
             consumer.subscribe(Collections.singletonList("test_topic_seek"));
-            List<String> messages = kafka.consume(consumer, 1000L);
+            List<String> messages = kafka.consume(consumer, 5000L);
             assertFalse(messages.isEmpty());
             consumer.seekToBeginning(consumer.assignment());
             kafka.seekToBeggining("test_topic_seek", "test_group");
