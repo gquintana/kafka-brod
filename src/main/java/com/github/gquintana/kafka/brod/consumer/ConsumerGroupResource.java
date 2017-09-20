@@ -2,6 +2,10 @@ package com.github.gquintana.kafka.brod.consumer;
 
 import com.github.gquintana.kafka.brod.Resources;
 import com.github.gquintana.kafka.brod.Responses;
+import com.github.gquintana.kafka.brod.topic.Topic;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
@@ -26,6 +30,11 @@ public class ConsumerGroupResource {
      * @param topic Optional topic name to filter assigned topics
      */
     @GET
+    @ApiOperation(value = "Get consumer group detail")
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Consumer group found", response = ConsumerGroup.class),
+        @ApiResponse(code = 404, message = "Consumer group not found")
+    })
     public Response getGroup(@QueryParam("topic") String topic) {
         return Responses.of(groupService.getGroup(groupId, topic));
     }

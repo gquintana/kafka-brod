@@ -12,6 +12,9 @@ import com.github.gquintana.kafka.brod.security.FileBasedSecurityService;
 import com.github.gquintana.kafka.brod.security.SecurityService;
 import com.github.gquintana.kafka.brod.topic.PartitionService;
 import com.github.gquintana.kafka.brod.topic.TopicService;
+import io.swagger.jaxrs.config.BeanConfig;
+import io.swagger.jaxrs.listing.ApiListingResource;
+import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
@@ -20,6 +23,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.ext.ContextResolver;
 import java.lang.reflect.Constructor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class KafkaBrodApplication implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaBrodApplication.class);
@@ -58,6 +63,7 @@ public class KafkaBrodApplication implements AutoCloseable {
         partitionService = new PartitionService(zookeeperService);
         consumerGroupService = new ConsumerGroupService(configuration.getAsString("kafka.servers").get());
 
+        swaggerConfig();
         resourceConfig();
 
         jerseyServer().run();
@@ -97,6 +103,29 @@ public class KafkaBrodApplication implements AutoCloseable {
             super(objectMapper);
         }
     }
+
+    private void swaggerConfig() {
+        String baseUrl = configuration.getAsString("http.server.baseUrl").get();
+        Matcher matcher = Pattern.compile("(https?)://([^:/]+(?::\\d+)?)(/.*)?").matcher(baseUrl);
+        String resources = getClass().getPackage().getName();
+        BeanConfig beanConfig = new BeanConfig();
+        beanConfig.setVersion("1.0.0");
+        if (matcher.matches()) {
+            beanConfig.setSchemes(new String[] {matcher.group(1)});
+            beanConfig.setHost(matcher.group(2));
+            beanConfig.setBasePath(matcher.group(3));
+        } else {
+            beanConfig.setSchemes(new String[]{"http"});
+            beanConfig.setHost(baseUrl);
+            beanConfig.setBasePath("/");
+        }
+        beanConfig.setResourcePackage(resources);
+        beanConfig.setTitle("Kafka Brod");
+        beanConfig.setDescription("Apache Kafka monitoring and manager web based tool");
+        beanConfig.setScan(true);
+    }
+
+
     private ResourceConfig resourceConfig() {
         resourceConfig = new ResourceConfig();
 
@@ -115,12 +144,12 @@ public class KafkaBrodApplication implements AutoCloseable {
             CacheResponseFilter filter = new CacheResponseFilter(configuration.getAsString("http.cache.control").orElse("max-age=10"));
             resourceConfig.register(filter);
         }
-        resourceConfig.registerInstances(
-                resources.brokersResource(),
-                resources.topicsResource(),
-                resources.consumerGroupsResource());
+        resourceConfig.registerInstances(resources.applicationResource());
         resourceConfig.register(new ObjectMapperContextResolver(objectMapper));
         resourceConfig.register(LoggingFeature.class);
+        // Swagger
+        resourceConfig.register(ApiListingResource.class);
+        resourceConfig.register(SwaggerSerializers.class);
         return resourceConfig;
     }
 
