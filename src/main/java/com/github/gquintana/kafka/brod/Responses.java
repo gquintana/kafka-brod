@@ -18,7 +18,7 @@ public final class Responses {
         if (optional.isPresent()) {
             responseBuilder = Response.ok(optional.get());
         } else {
-            responseBuilder = Response.noContent();
+            responseBuilder = Response.status(Response.Status.NOT_FOUND);
         }
         return responseBuilder.build();
     }

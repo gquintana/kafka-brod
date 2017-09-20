@@ -90,9 +90,9 @@ public class ConsumerGroupService implements AutoCloseable {
      */
     public Optional<ConsumerGroup> getGroup(String groupId, String topic) {
         AdminClient.ConsumerGroupSummary groupSummary = getGroupSummary(groupId);
-        if ("dead".equalsIgnoreCase(groupSummary.state())) {
+        /*if ("dead".equalsIgnoreCase(groupSummary.state())) {
             return Optional.empty();
-        }
+        }*/
         ConsumerGroup group = convertToJson(groupId, groupSummary);
         List<com.github.gquintana.kafka.brod.consumer.Consumer> consumers = getConsumerSummaries(groupId).stream()
             .map(c -> convertToJson(c, topic))

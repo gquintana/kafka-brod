@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
-@Api
+@Api(tags = {"topic", "partition"})
 @Produces(MediaType.APPLICATION_JSON)
 public class PartitionsResource {
     private final Resources resources;

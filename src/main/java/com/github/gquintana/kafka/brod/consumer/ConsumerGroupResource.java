@@ -3,6 +3,7 @@ package com.github.gquintana.kafka.brod.consumer;
 import com.github.gquintana.kafka.brod.Resources;
 import com.github.gquintana.kafka.brod.Responses;
 import com.github.gquintana.kafka.brod.topic.Topic;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -13,6 +14,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+@Api(tags = {"consumer"})
 @Produces(MediaType.APPLICATION_JSON)
 public class ConsumerGroupResource {
     private final Resources resources;

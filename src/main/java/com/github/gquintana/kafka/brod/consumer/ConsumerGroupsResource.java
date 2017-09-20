@@ -8,7 +8,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Api
+@Api(tags = {"consumer"})
 @Produces(MediaType.APPLICATION_JSON)
 public class ConsumerGroupsResource {
     private final Resources resources;

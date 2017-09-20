@@ -8,6 +8,7 @@ import com.github.gquintana.kafka.brod.broker.BrokerService;
 import com.github.gquintana.kafka.brod.cache.CacheResponseFilter;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupService;
 import com.github.gquintana.kafka.brod.security.BasicAuthRequestFilter;
+import com.github.gquintana.kafka.brod.security.CorsResponseFilter;
 import com.github.gquintana.kafka.brod.security.FileBasedSecurityService;
 import com.github.gquintana.kafka.brod.security.SecurityService;
 import com.github.gquintana.kafka.brod.topic.PartitionService;
@@ -137,6 +138,10 @@ public class KafkaBrodApplication implements AutoCloseable {
             BasicAuthRequestFilter filter = new BasicAuthRequestFilter("UTF-8", securityService);
             resourceConfig.register(filter);
             resourceConfig.register(RolesAllowedDynamicFeature.class);
+        }
+
+        if (configuration.getAsBoolean("http.security.cors.enabled").orElse(false)) {
+            resourceConfig.register(CorsResponseFilter.class);
         }
 
         resourceConfig.register(RuntimeExceptionMapper.class);
