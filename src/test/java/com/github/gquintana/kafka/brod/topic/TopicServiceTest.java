@@ -103,6 +103,22 @@ public class TopicServiceTest {
         assertThat(topic.getName(), equalTo(name));
         assertThat(topic.getPartitions(), equalTo(3));
         assertThat(topic.getReplicationFactor(), equalTo(0));
+        assertThat(topic.isInternal(), equalTo(false));
+    }
+
+    @Test
+    public void testGetInternal() throws IOException {
+        // Given
+        String name = "test_get_internal-" + RANDOM.nextInt(999);
+        topicService.createTopic(new Topic(name, 3, 1, false, new Properties()));
+        KAFKA_RULE.getKafka().send(name, "Message");
+        KAFKA_RULE.getKafka().consume(name, "test_get_internal", 5000L);
+        // When
+        Topic topic = topicService.getTopic("__consumer_offsets").get();
+        // Then
+        assertThat(topic, notNullValue());
+        assertThat(topic.getName(), equalTo("__consumer_offsets"));
+        assertThat(topic.isInternal(), equalTo(true));
     }
 
     @Test

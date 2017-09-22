@@ -43,7 +43,7 @@ public class TopicService {
         MetadataResponse.TopicMetadata topicMetadata = AdminUtils.fetchTopicMetadataFromZk(name, getZkUtils());
         int partitions = topicMetadata.partitionMetadata().stream().mapToInt(MetadataResponse.PartitionMetadata::partition).max().orElse(-1) + 1;
         int replicationFactor = topicMetadata.partitionMetadata().stream().mapToInt(p -> p.replicas().size()).max().orElse(0);
-        return Optional.of(new Topic(name, partitions, replicationFactor, config));
+        return Optional.of(new Topic(name, partitions, replicationFactor, topicMetadata.isInternal(), config));
     }
 
     public boolean existTopic(String name) {
