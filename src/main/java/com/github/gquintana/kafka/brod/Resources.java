@@ -7,14 +7,14 @@ import com.github.gquintana.kafka.brod.topic.PartitionsResource;
 import com.github.gquintana.kafka.brod.topic.TopicResource;
 import com.github.gquintana.kafka.brod.topic.TopicsResource;
 
-import java.util.Set;
-
 public class Resources {
     private final KafkaBrodApplication application;
     private final KafkaBrodResource applicationResource;
     private final BrokersResource brokersResource;
     private final TopicsResource topicsResource;
     private final ConsumerGroupsResource consumerGroupsResource;
+    private final StaticResource uiResource;
+    private final ApiResource apiResource;
 
     public Resources(KafkaBrodApplication application) {
         this.application = application;
@@ -22,6 +22,9 @@ public class Resources {
         brokersResource = new BrokersResource(this, application.brokerService());
         topicsResource = new TopicsResource(this, application.topicService());
         consumerGroupsResource = new ConsumerGroupsResource(this, application.consumerGroupService());
+        apiResource = new ApiResource(this);
+        uiResource = new StaticResource();
+
     }
 
     public BrokersResource brokersResource() {
@@ -50,5 +53,13 @@ public class Resources {
 
     public KafkaBrodResource applicationResource() {
         return this.applicationResource;
+    }
+
+    public StaticResource uiResource() {
+        return uiResource;
+    }
+
+    public ApiResource apiResource() {
+        return apiResource;
     }
 }
