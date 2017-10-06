@@ -1,9 +1,7 @@
 var path = require('path')
-var loaders = require('./loaders')
-var config = require('./config')
-var isProduction = process.env.NODE_ENV === 'production'
-var sourceDir = path.resolve(__dirname, '../src/main/js')
-var testDir = path.resolve(__dirname, '../src/test/js')
+var utils = require('./utils')
+var config = require('../config')
+var vueLoaderConfig = require('./vue-loader.conf')
 
 function resolve (dir) {
   return path.join(__dirname, '..', dir)
@@ -11,20 +9,20 @@ function resolve (dir) {
 
 module.exports = {
   entry: {
-    app: path.join(sourceDir, 'main.js')
+    app: path.join(config.build.srcDir, 'main.js')
   },
   output: {
-    path: config.build.targetDir,
+    path: config.build.assetsRoot,
     filename: '[name].js',
     publicPath: process.env.NODE_ENV === 'production'
-      ? './' // /static/
-      : '/'
+      ? config.build.assetsPublicPath
+      : config.dev.assetsPublicPath
   },
   resolve: {
     extensions: ['.js', '.vue', '.json'],
     alias: {
       'vue$': 'vue/dist/vue.esm.js',
-      '@': sourceDir,
+      '@': config.build.srcDir,
     }
   },
   module: {
@@ -33,7 +31,7 @@ module.exports = {
         test: /\.(js|vue)$/,
         loader: 'eslint-loader',
         enforce: 'pre',
-        include: [sourceDir, testDir],
+        include: [config.build.srcDir, config.build.testDir],
         options: {
           formatter: require('eslint-friendly-formatter')
         }
@@ -41,29 +39,27 @@ module.exports = {
       {
         test: /\.vue$/,
         loader: 'vue-loader',
-        options: {
-          loaders: loaders.cssLoaders({
-            sourceMap: isProduction,
-            extract: isProduction
-          }),
-          transformToRequire: {
-            source: 'src',
-            img: 'src',
-            image: 'xlink:href'
-          }
-        }
+        options: vueLoaderConfig
       },
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        include: [sourceDir, testDir]
+        include: [config.build.srcDir, config.build.testDir]
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
         loader: 'url-loader',
         options: {
           limit: 10000,
-          name: 'img/[name].[hash:7].[ext]'
+          name: utils.assetsPath('img/[name].[hash:7].[ext]')
+        }
+      },
+      {
+        test: /\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/,
+        loader: 'url-loader',
+        options: {
+          limit: 10000,
+          name: utils.assetsPath('media/[name].[hash:7].[ext]')
         }
       },
       {
@@ -71,7 +67,7 @@ module.exports = {
         loader: 'url-loader',
         options: {
           limit: 10000,
-          name: 'fonts/[name].[hash:7].[ext]'
+          name: utils.assetsPath('fonts/[name].[hash:7].[ext]')
         }
       }
     ]

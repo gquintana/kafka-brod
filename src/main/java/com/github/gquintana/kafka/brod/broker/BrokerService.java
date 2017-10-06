@@ -101,8 +101,8 @@ public class BrokerService {
                 }
             }
             // Normalize Protocol
-            if (jsonBroker.getHost() != null && !jsonBroker.getHost().isEmpty()) {
-                broker.setHost(jsonBroker.getHost());
+            if (jsonBroker.getProtocol() != null && !jsonBroker.getProtocol().isEmpty()) {
+                broker.setProtocol(jsonBroker.getProtocol());
             } else if (endpoints1.size() == 1){
                 broker.setProtocol(endpoints1.get(0).protocol);
             }

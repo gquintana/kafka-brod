@@ -2,7 +2,7 @@
   <div>
     <h2>Brokers</h2>
     <ul v-if="brokers && brokers.length">
-      <li v-for="broker of brokers">{{broker}}</li>
+      <router-link tag="li" v-for="broker of brokers" key="broker" :to="{name:'Broker', params:{id: broker}}">{{broker}}</router-link>
     </ul>
   </div>
 </template>
