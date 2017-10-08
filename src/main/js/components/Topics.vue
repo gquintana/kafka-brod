@@ -2,7 +2,7 @@
   <div>
     <h2>Topics</h2>
     <ul v-if="topics && topics.length">
-      <li v-for="topic of topics">{{topic}}</li>
+      <router-link tag="li" v-for="topic of topics" key="topic" :to="{name:'Topic', params:{name: topic}}"><a>{{topic}}</a></router-link>
     </ul>
 
   </div>
@@ -20,7 +20,6 @@
     created: function () {
       axios.get(`topics`)
         .then(response => {
-          console.log(response.data)
           this.topics = response.data
         })
         .catch(e => {

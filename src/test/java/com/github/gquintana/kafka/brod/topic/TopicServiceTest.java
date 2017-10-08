@@ -96,13 +96,14 @@ public class TopicServiceTest {
         List<String> topics = topicService.getTopics();
         String name = "test_get-" + RANDOM.nextInt(999);
         topicService.createTopic(new Topic(name, 3, 1, new Properties()));
+        KAFKA_RULE.getKafka().send(name, "message");
         // When
         Topic topic = topicService.getTopic(name).get();
         // Then
         assertThat(topic, notNullValue());
         assertThat(topic.getName(), equalTo(name));
         assertThat(topic.getPartitions(), equalTo(3));
-        assertThat(topic.getReplicationFactor(), equalTo(0));
+        assertThat(topic.getReplicationFactor(), equalTo(1));
         assertThat(topic.isInternal(), equalTo(false));
     }
 

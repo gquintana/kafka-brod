@@ -1,35 +1,14 @@
 <template>
   <div id="app">
-    <md-toolbar>
-      <md-button class="md-icon-button" @click="$refs.sidenav.toggle()">
-        <md-icon>menu</md-icon>
-      </md-button>
-      <h1 class="md-title">Kafka Brod</h1>
-    </md-toolbar>
-    <md-sidenav class="md-left" ref="sidenav">
-      <md-toolbar>
-        <md-button class="md-icon-button" @click="$refs.sidenav.toggle()">
-          <md-icon>menu</md-icon>
-        </md-button>
-      </md-toolbar>
-      <md-list>
-        <router-link tag="li" to="brokers" class="md-list-item" >
-          <div class="md-list-item-container md-button" @click="$refs.sidenav.toggle()">
-            <md-icon>computer</md-icon><span>Brokers</span>
-          </div>
-        </router-link>
-        <router-link tag="li" to="topics" class="md-list-item">
-          <div class="md-list-item-container md-button" @click="$refs.sidenav.toggle()">
-              <md-icon>book</md-icon><span>Topics</span>
-          </div>
-        </router-link>
-        <router-link  tag="li" to="groups" class="md-list-item">
-          <div class="md-list-item-container md-button" @click="$refs.sidenav.toggle()">
-              <md-icon>group</md-icon><span>Consumer Groups</span>
-          </div>
-        </router-link>
-      </md-list>
-    </md-sidenav>
+    <b-navbar toggleable="md" type="primary" variant="light">
+      <b-navbar-brand>Kafka Brod</b-navbar-brand>
+
+      <b-nav>
+        <b-nav-item to="/brokers" active-class="active"><octicon name="device-desktop"/> Brokers</b-nav-item>
+        <b-nav-item to="/topics" active-class="active"><octicon name="file"/> Topics</b-nav-item>
+        <b-nav-item to="/groups" active-class="active"><octicon name="organization"/> Consumer Groups</b-nav-item>
+      </b-nav>
+    </b-navbar>
     <div class="main-content">
       <router-view></router-view>
     </div>
@@ -37,9 +16,14 @@
 </template>
 
 <script>
-export default {
-  name: 'app'
-}
+  import Octicon from 'vue-octicon/components/Octicon.vue'
+  export default {
+    name: 'app',
+    components: { Octicon },
+    created: function () {
+      console.log(Octicon)
+    }
+  }
 </script>
 
 <style>

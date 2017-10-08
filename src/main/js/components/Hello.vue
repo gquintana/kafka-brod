@@ -1,7 +1,6 @@
 <template>
-  <div class="hello">
-    <h1>Welcome</h1>
-  </div>
+  <b-jumbotron header="Kafka Brod" lead="A web UI for Apache Kafka" >
+  </b-jumbotron>
 </template>
 
 <script>

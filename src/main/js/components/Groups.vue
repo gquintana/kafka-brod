@@ -19,7 +19,6 @@
     created: function () {
       axios.get(`groups`)
         .then(response => {
-          console.log(response.data)
           this.groups = response.data
         })
         .catch(e => {
