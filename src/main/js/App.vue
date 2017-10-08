@@ -4,9 +4,9 @@
       <b-navbar-brand>Kafka Brod</b-navbar-brand>
 
       <b-nav>
-        <b-nav-item to="/brokers" active-class="active"><octicon name="device-desktop"/> Brokers</b-nav-item>
-        <b-nav-item to="/topics" active-class="active"><octicon name="file"/> Topics</b-nav-item>
-        <b-nav-item to="/groups" active-class="active"><octicon name="organization"/> Consumer Groups</b-nav-item>
+        <b-nav-item to="/brokers" active-class="active" exact><octicon name="device-desktop"/> Brokers</b-nav-item>
+        <b-nav-item to="/topics" active-class="active" exact><octicon name="file"/> Topics</b-nav-item>
+        <b-nav-item to="/groups" active-class="active" exact><octicon name="organization"/> Consumer Groups</b-nav-item>
       </b-nav>
     </b-navbar>
     <div class="main-content">
@@ -19,10 +19,7 @@
   import Octicon from 'vue-octicon/components/Octicon.vue'
   export default {
     name: 'app',
-    components: { Octicon },
-    created: function () {
-      console.log(Octicon)
-    }
+    components: { Octicon }
   }
 </script>
 

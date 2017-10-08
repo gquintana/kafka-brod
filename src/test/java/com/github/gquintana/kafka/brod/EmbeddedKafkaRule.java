@@ -3,6 +3,10 @@ package com.github.gquintana.kafka.brod;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
 
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.joining;
+
 public class EmbeddedKafkaRule extends ExternalResource {
     private final TemporaryFolder temporaryFolder;
 
@@ -27,6 +31,10 @@ public class EmbeddedKafkaRule extends ExternalResource {
 
     public EmbeddedKafka getKafka() {
         return kafkas[0];
+    }
+
+    public String bootstrapServers() {
+        return Stream.of(kafkas).map(kafka -> "localhost:" + kafka.port()).collect(joining(","));
     }
 
     @Override

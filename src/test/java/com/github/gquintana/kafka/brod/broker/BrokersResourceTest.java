@@ -9,8 +9,10 @@ import org.mockito.runners.MockitoJUnitRunner;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.junit.Assert.assertThat;
@@ -32,11 +34,11 @@ public class BrokersResourceTest {
     @Test
     public void testGetIds() {
         // Given
-        when(brokerService.getBrokers()).thenReturn(asList(2, 3));
+        when(brokerService.getBrokers()).thenReturn(asList(new Broker(2), new Broker(3)));
         // When
-        List<Integer> brokers = brokersResource.getBrokers();
+        List<Broker> brokers = brokersResource.getBrokers();
         // Then
-        assertThat(brokers, hasItems(2, 3));
+        assertThat(brokers.stream().map(Broker::getId).collect(toList()), hasItems(2, 3));
     }
 
     @Test

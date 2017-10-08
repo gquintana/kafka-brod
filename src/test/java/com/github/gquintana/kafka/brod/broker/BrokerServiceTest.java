@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.github.gquintana.kafka.brod.EmbeddedKafkaRule;
+import com.github.gquintana.kafka.brod.KafkaService;
 import com.github.gquintana.kafka.brod.ZookeeperService;
 import org.hamcrest.Matchers;
 import org.junit.BeforeClass;
@@ -13,7 +14,9 @@ import org.junit.rules.TemporaryFolder;
 
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
 public class BrokerServiceTest {
@@ -29,21 +32,23 @@ public class BrokerServiceTest {
     @BeforeClass
     public static void setUpClass() throws Exception {
         ZookeeperService zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
+        KafkaService kafkaService = new KafkaService(KAFKA_RULE.bootstrapServers(), "broker-service-test");
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        brokerService = new BrokerService(zookeeperService, objectMapper, 1000);
+        brokerService = new BrokerService(zookeeperService, objectMapper, 1000, kafkaService);
     }
 
     @Test
     public void testGetBrokers() throws Exception {
         // When
-        List<Integer> brokers = brokerService.getBrokers();
+        List<Broker> brokers = brokerService.getBrokers();
         // Then
-        assertThat(brokers, Matchers.hasSize(2));
-        assertThat(brokers, hasItems(0, 1));
+        assertThat(brokers, hasSize(2));
+        assertThat(brokers.stream().map(Broker::getId).collect(toList()), hasItems(0, 1));
+        assertThat(brokers.stream().map(Broker::getHost).distinct().collect(toList()), hasSize(1));
     }
 
     @Test

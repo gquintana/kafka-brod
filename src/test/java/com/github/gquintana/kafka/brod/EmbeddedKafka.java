@@ -39,6 +39,10 @@ public class EmbeddedKafka {
         this(0, logDir);
     }
 
+    public int port() {
+        return port;
+    }
+
     public static EmbeddedKafka createAndStart(TemporaryFolder temporaryFolder, int id) throws IOException {
         EmbeddedKafka kafka = create(temporaryFolder, id);
         kafka.start();

@@ -33,7 +33,7 @@ public class BrokersResource {
     @GET
     @ApiOperation(value = "List broker ids")
     @Cache("max-age=60")
-    public List<Integer> getBrokers() {
+    public List<Broker> getBrokers() {
         return brokerService.getBrokers();
     }
 

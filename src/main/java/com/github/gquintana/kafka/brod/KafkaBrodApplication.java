@@ -32,6 +32,7 @@ public class KafkaBrodApplication implements AutoCloseable {
     private final Configuration configuration;
     private ObjectMapper objectMapper;
     private ZookeeperService zookeeperService;
+    private KafkaService kafkaService;
     private BrokerService brokerService;
     private TopicService topicService;
     private ResourceConfig resourceConfig;
@@ -49,6 +50,10 @@ public class KafkaBrodApplication implements AutoCloseable {
             configuration.getAsString("zookeeper.servers").get(),
             configuration.getAsInteger("zookeeper.sessionTimeout").get(),
             configuration.getAsInteger("zookeeper.connectionTimeout").get());
+        kafkaService = new KafkaService(
+            configuration.getAsString("kafka.servers").get(),
+            configuration.getAsString("kafka.clientId").orElse("kafka-brod"));
+
 
         objectMapper();
 
@@ -59,7 +64,7 @@ public class KafkaBrodApplication implements AutoCloseable {
         } catch (ReflectiveOperationException e) {
             securityService = null;
         }
-        brokerService = new BrokerService(zookeeperService, objectMapper, configuration.getAsInteger("kafka.connectionTimeout").orElse(1000));
+        brokerService = new BrokerService(zookeeperService, objectMapper, configuration.getAsInteger("kafka.connectionTimeout").orElse(1000), kafkaService);
         topicService = new TopicService(zookeeperService);
         partitionService = new PartitionService(zookeeperService);
         consumerGroupService = new ConsumerGroupService(configuration.getAsString("kafka.servers").get());

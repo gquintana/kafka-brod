@@ -2,19 +2,22 @@ package com.github.gquintana.kafka.brod.broker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.gquintana.kafka.brod.KafkaBrodException;
+import com.github.gquintana.kafka.brod.KafkaService;
 import com.github.gquintana.kafka.brod.ZookeeperService;
 import kafka.admin.AdminUtils;
 import kafka.server.ConfigType;
 import kafka.utils.ZkUtils;
+import org.apache.kafka.clients.admin.DescribeClusterResult;
+import org.apache.kafka.common.KafkaFuture;
+import org.apache.kafka.common.Node;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -26,11 +29,13 @@ public class BrokerService {
     private final ZookeeperService zookeeperService;
     private final ObjectMapper objectMapper;
     private final int connectionTimeout;
+    private final KafkaService kafkaService;
 
-    public BrokerService(ZookeeperService zookeeperService, ObjectMapper objectMapper, int connectionTimeout) {
+    public BrokerService(ZookeeperService zookeeperService, ObjectMapper objectMapper, int connectionTimeout, KafkaService kafkaService) {
         this.zookeeperService = zookeeperService;
         this.objectMapper = objectMapper;
         this.connectionTimeout = connectionTimeout;
+        this.kafkaService = kafkaService;
     }
 
     private ZkUtils getZkUtils() {
@@ -124,11 +129,28 @@ public class BrokerService {
     /**
      * List broker Ids
      */
-    public List<Integer> getBrokers() {
-        return zookeeperService.getChildren("/brokers/ids").stream()
-                .map(Integer::valueOf)
-                .sorted()
-                .collect(Collectors.toList());
+    public List<Broker> getBrokers() {
+        DescribeClusterResult cluster = kafkaService.adminClient().describeCluster();
+        KafkaFuture<Node> controllerFuture = cluster.controller();
+        KafkaFuture<Collection<Node>> nodesFuture = cluster.nodes();
+        try {
+            Node controller = controllerFuture.get();
+            Collection<Node> nodes = nodesFuture.get();
+            return nodes.stream().map(n -> this.convertToBroker(n, controller)).collect(Collectors.toList());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return Collections.emptyList();
+        } catch (ExecutionException e) {
+            throw new KafkaBrodException("Failed to get brokers", e);
+        }
+    }
+
+    private Broker convertToBroker(Node node, Node controller) {
+        Broker broker = new Broker(node.id());
+        broker.setController(controller != null && node.id() == controller.id());
+        broker.setHost(node.host());
+        broker.setPort(node.port());
+        return broker;
     }
 
     private static class Controller {
