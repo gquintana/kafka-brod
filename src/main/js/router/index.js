@@ -5,7 +5,8 @@ import Brokers from '@/components/Brokers'
 import Broker from '@/components/Broker'
 import Topics from '@/components/Topics'
 import Topic from '@/components/Topic'
-import Groups from '@/components/Groups'
+import ConsumerGroups from '@/components/ConsumerGroups'
+import ConsumerGroup from '@/components/ConsumerGroup'
 
 Vue.use(Router)
 
@@ -27,19 +28,24 @@ export default new Router({
       component: Broker
     },
     {
-      path: '/topics/:name',
-      name: 'Topic',
-      component: Topic
-    },
-    {
       path: '/topics',
       name: 'Topics',
       component: Topics
     },
     {
+      path: '/topics/:name',
+      name: 'Topic',
+      component: Topic
+    },
+    {
       path: '/groups',
-      name: 'Consumer Groups',
-      component: Groups
+      name: 'ConsumerGroups',
+      component: ConsumerGroups
+    },
+    {
+      path: '/groups/:id',
+      name: 'ConsumerGroup',
+      component: ConsumerGroup
     }
   ]
 })

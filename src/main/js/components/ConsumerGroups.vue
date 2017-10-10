@@ -1,9 +1,9 @@
 <template>
   <div>
-    <h2>Groups</h2>
-    <ul v-if="groups && groups.length">
-      <li v-for="group of groups">{{group}}</li>
-    </ul>
+    <h2>Consumer Groups</h2>
+    <b-container v-if="groups && groups.length">
+      <b-table striped hover :items="groups" @row-clicked="groupClicked" class="table-clickable"/>
+    </b-container>
   </div>
 </template>
 
@@ -19,11 +19,16 @@
     created: function () {
       axios.get(`groups`)
         .then(response => {
-          this.groups = response.data
+          this.groups = response.data.map(g => { return { id: g } })
         })
         .catch(e => {
           this.errors.push(e)
         })
+    },
+    methods: {
+      groupClicked: function (group) {
+        this.$router.push({ name: 'ConsumerGroup', params: { id: group.id } })
+      }
     }
   }
 </script>

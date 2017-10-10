@@ -2,7 +2,7 @@
   <div>
     <h2>Brokers</h2>
     <b-container v-if="brokers && brokers.length">
-      <b-table striped hover :items="brokers" :fields="brokerFields" @row-clicked="brokerClicked"/>
+      <b-table striped hover :items="brokers" :fields="brokerFields" @row-clicked="brokerClicked" class="table-clickable"/>
     </b-container>
   </div>
 </template>
@@ -29,7 +29,6 @@
     methods: {
       brokerClicked: function (broker) {
         this.$router.push({name: 'Broker', params: { id: broker.id }})
-        console.log(broker)
       }
     }
   }

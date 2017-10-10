@@ -1,0 +1,62 @@
+<template>
+  <div>
+    <h2>Consumer Group {{ group.group_id}}</h2>
+    <b-container v-if="group">
+      <b-row>
+        <b-col sm="2"><label>Protocol</label></b-col>
+        <b-col sm="3">{{ group.protocol }}</b-col>
+        <b-col sm="2"><label>State</label></b-col>
+        <b-col sm="2">{{ group.state }}</b-col>
+      </b-row>
+      <b-row>
+        <b-col sm="2"><label>Members</label></b-col>
+        <b-col sm="10">
+          <b-table striped hover :items="group.members" :fields="memberFields" @row-clicked="memberClicked" class="table-clickable"/>
+        </b-col>
+      </b-row>
+      <b-row v-if="selectedMember">
+        <b-col sm="2"><label>Partitions</label></b-col>
+        <b-col sm="10">
+          <b-table striped hover :items="selectedMember.partitions"/>
+        </b-col>
+      </b-row>
+    </b-container>
+  </div>
+</template>
+<script>
+  import axios from '../services/AxiosService'
+  import Octicon from 'vue-octicon/components/Octicon.vue'
+  export default {
+    data: function () {
+      return {
+        group: [],
+        memberFields: [ 'client_id', 'client_host', 'member_id', 'partition_count', 'lag_total' ],
+        selectedMember: null,
+        errors: []
+      }
+    },
+    components: { Octicon },
+    created: function () {
+      let groupId = this.$route.params.id
+      axios.get(`groups/` + groupId)
+        .then(response => {
+          let group = response.data
+          group.members.forEach(member => {
+            member.partition_count = member.partitions.length
+            member.lag_total = member.partitions.reduce((sum, partition) => sum + partition.lag, 0)
+          })
+          this.group = group
+          this.selectedMember = null
+        })
+        .catch(e => {
+          this.errors.push(e)
+        })
+    },
+    methods: {
+      memberClicked: function (member) {
+        this.selectedMember = member
+      }
+    }
+
+  }
+</script>

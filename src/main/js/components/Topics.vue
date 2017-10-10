@@ -1,9 +1,9 @@
 <template>
   <div>
     <h2>Topics</h2>
-    <ul v-if="topics && topics.length">
-      <router-link tag="li" v-for="topic of topics" key="topic" :to="{name:'Topic', params:{name: topic}}"><a>{{topic}}</a></router-link>
-    </ul>
+    <b-container v-if="topics && topics.length">
+      <b-table striped hover :items="topics" @row-clicked="topicClicked" class="table-clickable"/>
+    </b-container>
 
   </div>
 </template>
@@ -20,11 +20,16 @@
     created: function () {
       axios.get(`topics`)
         .then(response => {
-          this.topics = response.data
+          this.topics = response.data.map(t => { return { name: t } })
         })
         .catch(e => {
           this.errors.push(e)
         })
+    },
+    methods: {
+      topicClicked: function (topic) {
+        this.$router.push({ name: 'Topic', params: { name: topic.name } })
+      }
     }
   }
 </script>
