@@ -1,42 +1,29 @@
 package com.github.gquintana.kafka.brod.consumer;
 
+import com.github.gquintana.kafka.brod.KafkaService;
 import kafka.admin.AdminClient;
 import kafka.coordinator.group.GroupOverview;
 import kafka.coordinator.group.MemberSummary;
 import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import scala.Option;
-import scala.Predef;
 import scala.collection.JavaConversions;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ConsumerGroupService implements AutoCloseable {
+public class ConsumerGroupService {
     private static final long TIMEOUT_MS = 10000L;
-    private final String bootstrapServers;
-    private AdminClient adminClient;
+    private final KafkaService kafkaService;
 
-    public ConsumerGroupService(String bootstrapServers) {
-        this.bootstrapServers = bootstrapServers;
-    }
-
-    public synchronized AdminClient adminClient() {
-        if (adminClient == null) {
-            Map<String, Object> brokerConfig = new HashMap<>();
-            brokerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-            adminClient = AdminClient.create(JavaConversions.mapAsScalaMap(brokerConfig).toMap(Predef.conforms()));
-        }
-        return adminClient;
+    public ConsumerGroupService(KafkaService kafkaService) {
+        this.kafkaService = kafkaService;
     }
 
     private Collection<GroupOverview> getGroupOverviews() {
-        scala.collection.immutable.List<GroupOverview> groupOverviews = adminClient().listAllConsumerGroupsFlattened();
+        scala.collection.immutable.List<GroupOverview> groupOverviews = kafkaService.scalaAdminClient().listAllConsumerGroupsFlattened();
         return JavaConversions.asJavaCollection(groupOverviews);
     }
 
@@ -48,7 +35,7 @@ public class ConsumerGroupService implements AutoCloseable {
 
 
     public List<String> getGroupIds(int brokerId) {
-        scala.collection.immutable.Map<Node, scala.collection.immutable.List<GroupOverview>> groupsByNode = adminClient().listAllConsumerGroups();
+        scala.collection.immutable.Map<Node, scala.collection.immutable.List<GroupOverview>> groupsByNode = kafkaService.scalaAdminClient().listAllConsumerGroups();
         return JavaConversions.mapAsJavaMap(groupsByNode).entrySet().stream()
             .filter(e -> e.getKey().id() == brokerId)
             .flatMap(e -> JavaConversions.asJavaCollection(e.getValue()).stream())
@@ -67,17 +54,20 @@ public class ConsumerGroupService implements AutoCloseable {
     }
 
     private AdminClient.ConsumerGroupSummary getGroupSummary(String groupId) {
-        return adminClient().describeConsumerGroup(groupId, TIMEOUT_MS);
+        return kafkaService.scalaAdminClient().describeConsumerGroup(groupId, TIMEOUT_MS);
     }
 
-    private Collection<AdminClient.ConsumerSummary> getConsumerSummaries(String groupId) {
+    private List<com.github.gquintana.kafka.brod.consumer.Consumer> getConsumers(AdminClient.ConsumerGroupSummary groupSummary, String topic) {
         Option<scala.collection.immutable.List<AdminClient.ConsumerSummary>> consumerSummaries =
-            getGroupSummary(groupId).consumers();
+            groupSummary.consumers();
         if (consumerSummaries.isEmpty()) {
             return Collections.emptyList();
-        } else {
-            return JavaConversions.asJavaCollection(consumerSummaries.get());
         }
+        return JavaConversions.asJavaCollection(groupSummary.consumers().get())
+            .stream()
+            .map(c -> convertToJson(c, topic))
+            .sorted(Comparator.comparing(com.github.gquintana.kafka.brod.consumer.Consumer::getMemberId))
+            .collect(Collectors.toList());
     }
 
     public Optional<ConsumerGroup> getGroup(String groupId) {
@@ -90,32 +80,19 @@ public class ConsumerGroupService implements AutoCloseable {
      */
     public Optional<ConsumerGroup> getGroup(String groupId, String topic) {
         AdminClient.ConsumerGroupSummary groupSummary = getGroupSummary(groupId);
-        /*if ("dead".equalsIgnoreCase(groupSummary.state())) {
-            return Optional.empty();
-        }*/
-        ConsumerGroup group = convertToJson(groupId, groupSummary);
-        List<com.github.gquintana.kafka.brod.consumer.Consumer> consumers = getConsumerSummaries(groupId).stream()
-            .map(c -> convertToJson(c, topic))
-            .sorted(Comparator.comparing(com.github.gquintana.kafka.brod.consumer.Consumer::getMemberId))
-            .collect(Collectors.toList());
-        group.setMembers(consumers);
+        ConsumerGroup group = convertToJson(groupId, groupSummary, topic);
         List<ConsumerPartition> partitions = group.getMembers().stream().flatMap(m -> m.getPartitions().stream()).collect(Collectors.toList());
         getGroupOffset(groupId, partitions);
         return Optional.of(group);
     }
 
-    private ConsumerGroup convertToJson(String groupId, AdminClient.ConsumerGroupSummary groupSummary) {
+    private ConsumerGroup convertToJson(String groupId, AdminClient.ConsumerGroupSummary groupSummary, String topic) {
         ConsumerGroup group = new ConsumerGroup();
         group.setGroupId(groupId);
         group.setProtocol(groupSummary.productPrefix());
         group.setState(groupSummary.state());
-        Option<scala.collection.immutable.List<AdminClient.ConsumerSummary>> consumers = groupSummary.consumers();
-        if (consumers.nonEmpty()) {
-            group.setMembers(JavaConversions.asJavaCollection(consumers.get()).stream()
-                .map(this::convertToJson)
-                .sorted(Comparator.comparing(com.github.gquintana.kafka.brod.consumer.Consumer::getMemberId))
-                .collect(Collectors.toList()));
-        }
+        group.setAssignmentStrategy(groupSummary.assignmentStrategy());
+        group.setMembers(getConsumers(groupSummary, topic));
         return group;
     }
 
@@ -144,19 +121,8 @@ public class ConsumerGroupService implements AutoCloseable {
         return partition;
     }
 
-    private Consumer<String, String> createConsumer(String groupId) {
-        Map<String, Object> consumerConfig = new HashMap<>();
-        consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        consumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-        consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        consumerConfig.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
-        consumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        return new KafkaConsumer<>(consumerConfig);
-    }
-
     public void getGroupOffset(String groupId, List<ConsumerPartition> partitions) {
-        try(Consumer<String, String> consumer = createConsumer(groupId)) {
+        try(Consumer<String, String> consumer = kafkaService.consumer(groupId)) {
             List<TopicPartition> topicPartitions = partitions.stream().map(p -> new TopicPartition(p.getTopicName(), p.getId())).collect(Collectors.toList());
             consumer.assign(topicPartitions);
             consumer.seekToEnd(topicPartitions);
@@ -173,12 +139,5 @@ public class ConsumerGroupService implements AutoCloseable {
             partition.setMetadata(offsetAndMetadata.metadata());
         }
         partition.setCurrentOffset(position);
-    }
-
-    @Override
-    public void close() throws Exception {
-        if (adminClient != null) {
-            adminClient.close();
-        }
     }
 }

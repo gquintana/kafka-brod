@@ -44,7 +44,7 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        include: [config.build.srcDir, config.build.testDir]
+        include: [config.build.srcDir, config.build.testDir, resolve('node_modules/vue-octicon')]
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,

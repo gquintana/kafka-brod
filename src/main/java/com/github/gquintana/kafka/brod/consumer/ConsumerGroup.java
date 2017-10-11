@@ -7,6 +7,7 @@ public class ConsumerGroup {
     private String protocol;
     private String state;
     private List<Consumer> members;
+    private String assignmentStrategy;
 
 
     public String getGroupId() {
@@ -41,4 +42,11 @@ public class ConsumerGroup {
         this.members = members;
     }
 
+    public String getAssignmentStrategy() {
+        return assignmentStrategy;
+    }
+
+    public void setAssignmentStrategy(String assignmentStrategy) {
+        this.assignmentStrategy = assignmentStrategy;
+    }
 }

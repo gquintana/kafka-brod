@@ -1,6 +1,7 @@
 package com.github.gquintana.kafka.brod.consumer;
 
 import com.github.gquintana.kafka.brod.EmbeddedKafkaRule;
+import com.github.gquintana.kafka.brod.KafkaService;
 import com.github.gquintana.kafka.brod.ZookeeperService;
 import com.github.gquintana.kafka.brod.topic.Topic;
 import com.github.gquintana.kafka.brod.topic.TopicService;
@@ -36,15 +37,17 @@ public class ConsumerGroupServiceTest {
     private static ZookeeperService zookeeperService;
     private static TopicService topicService;
     private static ExecutorService executor = Executors.newFixedThreadPool(6);
+    private static KafkaService kafkaService;
     private List<TopicConsumerRunnable> runnables = new ArrayList<>();
 
     @BeforeClass
     public static void setUpClass() throws IOException {
         zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
+        kafkaService = new KafkaService("localhost:9092", "kafka-brod");
         topicService = new TopicService(zookeeperService);
         topicService.createTopic(new Topic(TOPIC, PARTITIONS, 1, new Properties()));
         topicService.createTopic(new Topic(TOPIC2, PARTITIONS, 1, new Properties()));
-        groupService = new ConsumerGroupService("localhost:9092");
+        groupService = new ConsumerGroupService(kafkaService);
     }
 
     private Consumer startConsumer(String groupId, String ... topics) throws InterruptedException {
@@ -117,7 +120,7 @@ public class ConsumerGroupServiceTest {
     @AfterClass
     public static void tearDownClass() throws Exception {
         executor.shutdown();
-        groupService.close();
+        kafkaService.close();
         zookeeperService.close();
     }
 

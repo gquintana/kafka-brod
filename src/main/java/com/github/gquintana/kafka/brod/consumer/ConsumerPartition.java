@@ -31,7 +31,7 @@ public class ConsumerPartition {
         this.id = id;
     }
 
-    public long getCommitedOffset() {
+    public Long getCommitedOffset() {
         return commitedOffset;
     }
 

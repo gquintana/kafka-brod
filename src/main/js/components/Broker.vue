@@ -16,7 +16,7 @@
         <b-col sm="1"><label>Protocol</label></b-col>
         <b-col sm="3">{{ broker.protocol }}</b-col>
         <b-col sm="2"><label>JMX Port</label></b-col>
-        <b-col sm="2">{{ broker.jmxPort }}</b-col>
+        <b-col sm="2">{{ broker.jmx_port }}</b-col>
       </b-row>
       <b-row>
         <b-col sm="1"><label>Endpoints</label></b-col>

@@ -6,7 +6,9 @@
         <b-col sm="2"><label>Protocol</label></b-col>
         <b-col sm="3">{{ group.protocol }}</b-col>
         <b-col sm="2"><label>State</label></b-col>
-        <b-col sm="2">{{ group.state }}</b-col>
+        <b-col sm="1">{{ group.state }}</b-col>
+        <b-col sm="2"><label>Assignment</label></b-col>
+        <b-col sm="2">{{ group.assignment_strategy }}</b-col>
       </b-row>
       <b-row>
         <b-col sm="2"><label>Members</label></b-col>
