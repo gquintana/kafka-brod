@@ -2,7 +2,7 @@ package com.github.gquintana.kafka.brod.broker;
 
 import com.github.gquintana.kafka.brod.Resources;
 import com.github.gquintana.kafka.brod.Responses;
-import com.github.gquintana.kafka.brod.cache.Cache;
+import com.github.gquintana.kafka.brod.cache.CacheControl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -32,7 +32,7 @@ public class BrokersResource {
      */
     @GET
     @ApiOperation(value = "List broker ids")
-    @Cache("max-age=60")
+    @CacheControl("max-age=60")
     public List<Broker> getBrokers() {
         return brokerService.getBrokers();
     }

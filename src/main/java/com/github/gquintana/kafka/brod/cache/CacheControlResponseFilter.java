@@ -12,17 +12,17 @@ import java.util.Optional;
 /**
  * Response filter which adds Cache-Control header
  */
-public class CacheResponseFilter implements ContainerResponseFilter {
+public class CacheControlResponseFilter implements ContainerResponseFilter {
     /**
      * Default Cache-Control HTTP header value for GET requests
      */
     private final String cacheControlHeader;
 
-    public CacheResponseFilter() {
+    public CacheControlResponseFilter() {
         cacheControlHeader = "max-age=10";
     }
 
-    public CacheResponseFilter(String cacheControlHeader) {
+    public CacheControlResponseFilter(String cacheControlHeader) {
         this.cacheControlHeader = cacheControlHeader;
     }
 
@@ -35,7 +35,7 @@ public class CacheResponseFilter implements ContainerResponseFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-        Optional<Cache> cacheAnnotation = findAnnotation(responseContext, Cache.class);
+        Optional<CacheControl> cacheAnnotation = findAnnotation(responseContext, CacheControl.class);
         if (cacheAnnotation.isPresent()) {
             responseContext.getHeaders().putSingle(HttpHeaders.CACHE_CONTROL, cacheAnnotation.get().value());
             return;

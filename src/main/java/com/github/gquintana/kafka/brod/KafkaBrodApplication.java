@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.gquintana.kafka.brod.broker.BrokerService;
-import com.github.gquintana.kafka.brod.cache.CacheResponseFilter;
+import com.github.gquintana.kafka.brod.cache.CacheControlResponseFilter;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupService;
 import com.github.gquintana.kafka.brod.security.BasicAuthRequestFilter;
 import com.github.gquintana.kafka.brod.security.CorsResponseFilter;
@@ -151,7 +151,7 @@ public class KafkaBrodApplication implements AutoCloseable {
 
         resourceConfig.register(RuntimeExceptionMapper.class);
         if (configuration.getAsBoolean("http.cache.enabled").orElse(false)) {
-            CacheResponseFilter filter = new CacheResponseFilter(configuration.getAsString("http.cache.control").orElse("max-age=10"));
+            CacheControlResponseFilter filter = new CacheControlResponseFilter(configuration.getAsString("http.cache.control").orElse("max-age=10"));
             resourceConfig.register(filter);
         }
         resourceConfig.registerInstances(resources.applicationResource());
