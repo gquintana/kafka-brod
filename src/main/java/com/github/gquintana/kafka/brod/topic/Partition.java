@@ -6,6 +6,8 @@ import java.util.List;
 public class Partition {
     private String topicName;
     private int id;
+    private Long beginningOffset;
+    private Long endOffset;
     private List<Replica> replicas;
 
     public Partition() {
@@ -33,11 +35,34 @@ public class Partition {
         this.id = id;
     }
 
+    public Long getBeginningOffset() {
+        return beginningOffset;
+    }
+
+    public void setBeginningOffset(Long beginningOffset) {
+        this.beginningOffset = beginningOffset;
+    }
+
+    public Long getEndOffset() {
+        return endOffset;
+    }
+
+    public void setEndOffset(Long endOffset) {
+        this.endOffset = endOffset;
+    }
+
     public List<Replica> getReplicas() {
         return replicas;
     }
 
     public void setReplicas(List<Replica> replicas) {
         this.replicas = replicas;
+    }
+
+    public Long getRecords() {
+        if (beginningOffset == null || endOffset == null) {
+            return null;
+        }
+        return endOffset - beginningOffset;
     }
 }

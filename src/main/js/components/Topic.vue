@@ -37,6 +37,9 @@
             <thead>
               <tr>
                 <th>Id</th>
+                <th>Beginning offset</th>
+                <th>End offset</th>
+                <th>Records</th>
                 <th v-for="replica in topic.replication_factor">
                   {{ replica }}
                 </th>
@@ -45,6 +48,9 @@
             <tbody>
               <tr v-for="partition of topicPartitions" :key="partition.id">
                 <td>{{ partition.id }}</td>
+                <td>{{ partition.beginning_offset }}</td>
+                <td>{{ partition.end_offset }}</td>
+                <td>{{ partition.records }}</td>
                 <td v-for="replica of partition.replicas" :key="replica.broker_id">
                   <octicon name="heart" v-if="replica.leader"/>
                   <router-link :to="{name:'Broker', params:{id: replica.broker_id}}"><a>{{ replica.broker_id }}</a></router-link>
