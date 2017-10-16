@@ -4,8 +4,7 @@ public class ConsumerPartition {
     private String topicName;
     private int id;
     private Long commitedOffset;
-    private Long currentOffset;
-    private String metadata;
+    private Long endOffset;
 
     public ConsumerPartition() {
     }
@@ -39,26 +38,18 @@ public class ConsumerPartition {
         this.commitedOffset = commitedOffset;
     }
 
-    public Long getCurrentOffset() {
-        return currentOffset;
+    public Long getEndOffset() {
+        return endOffset;
     }
 
-    public void setCurrentOffset(Long currentOffset) {
-        this.currentOffset = currentOffset;
-    }
-
-    public String getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(String metadata) {
-        this.metadata = metadata;
+    public void setEndOffset(Long endOffset) {
+        this.endOffset = endOffset;
     }
 
     public Long getLag() {
-        if (commitedOffset == null || currentOffset == null) {
+        if (commitedOffset == null || endOffset == null) {
             return null;
         }
-        return currentOffset - commitedOffset;
+        return endOffset - commitedOffset;
     }
 }

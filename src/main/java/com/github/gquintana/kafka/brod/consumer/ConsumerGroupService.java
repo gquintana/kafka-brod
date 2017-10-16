@@ -126,13 +126,13 @@ public class ConsumerGroupService {
         partition.setTopicName(topicPartition.topic());
         partition.setId(topicPartition.partition());
         partition.setCommitedOffset(consumerOffsets.get(topicPartition));
-        partition.setCurrentOffset(topicOffsets.get(topicPartition));
+        partition.setEndOffset(topicOffsets.get(topicPartition));
         return partition;
     }
 
     private Map<TopicPartition, Long> getPartitionOffset(String groupId, List<TopicPartition> partitions) {
         try(Consumer<String, String> consumer = kafkaService.consumer(groupId)) {
-            return consumer.beginningOffsets(partitions);
+            return consumer.endOffsets(partitions);
         }
     }
 }

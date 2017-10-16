@@ -16,6 +16,12 @@
           <b-table striped hover :items="group.members" :fields="memberFields" @row-clicked="memberClicked" class="table-clickable"/>
         </b-col>
       </b-row>
+      <b-row>
+        <b-col sm="2"><label>Topics</label></b-col>
+        <b-col sm="10">
+          <b-table striped hover :items="topics" :fields="topicFields"/>
+        </b-col>
+      </b-row>
       <b-row v-if="selectedMember">
         <b-col sm="2"><label>Partitions</label></b-col>
         <b-col sm="10">
@@ -28,11 +34,44 @@
 <script>
   import axios from '../services/AxiosService'
   import Octicon from 'vue-octicon/components/Octicon.vue'
+  function isValidLag (lag) {
+    return lag === 0 || lag > 0
+  }
+  function sumLag (lag1, lag2) {
+    if (isValidLag(lag1)) {
+      if (isValidLag(lag2)) {
+        return lag1 + lag2
+      } else {
+        return lag1
+      }
+    } else {
+      return lag2
+    }
+  }
+
+  function partitionByTopicReducer (topicMap, partition) {
+    let topic = topicMap.get(partition.topic)
+    if (topic) {
+      topic.partition_count++
+      topic.lag_total = sumLag(topic.lag_total, partition.lag)
+    } else {
+      topic = {
+        name: partition.topic_name,
+        partition_count: 1,
+        lag_total: partition.lag
+      }
+      topicMap.set(partition.topic, topic)
+    }
+    return topicMap
+  }
+
   export default {
     data: function () {
       return {
         group: [],
         memberFields: [ 'client_id', 'client_host', 'member_id', 'partition_count', 'lag_total' ],
+        topics: [],
+        topicFields: [ 'name', 'partition_count', 'lag_total' ],
         selectedMember: null,
         errors: []
       }
@@ -42,13 +81,17 @@
       let groupId = this.$route.params.id
       axios.get(`groups/` + groupId)
         .then(response => {
-          let group = response.data
+          const group = response.data
+          const partitions = []
           group.members.forEach(member => {
             member.partition_count = member.partitions.length
-            member.lag_total = member.partitions.reduce((sum, partition) => sum + partition.lag, 0)
+            member.lag_total = member.partitions.reduce(sumLag, 0)
+            member.partitions.forEach(partition => partitions.push(partition))
           })
+          this.topics = Array.from(partitions.reduce(partitionByTopicReducer, new Map()).values())
           this.group = group
           this.selectedMember = null
+          console.log(this.topics)
         })
         .catch(e => {
           this.errors.push(e)
