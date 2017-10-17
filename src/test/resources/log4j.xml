@@ -8,21 +8,14 @@
             <param name="ConversionPattern" value="%d{HH:mm:ss} %-5p %c{1} - %m%n" />
         </layout>
     </appender>
-    <!--
-    <appender name="file" class="org.apache.log4j.FileAppender">
-        <param name="File" value="file.log" />
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d{ISO8601} %-5p %c - %m%n" />
-        </layout>
-    </appender>
-    -->
     <!-- Loggers -->
+    <logger name="kafka"><level value="WARN"/></logger>
+    <logger name="org.apache.kafka"><level value="WARN"/></logger>
+    <logger name="org.apache.zookeeper"><level value="WARN"/></logger>
+    <logger name="org.I0Itec.zkclient"><level value="WARN"/></logger>
     <root>
-        <priority value="INFO" />
+        <level value="INFO" />
         <appender-ref ref="console" />
-        <!--
-        <appender-ref ref="file" />
-        -->
     </root>
 </log4j:configuration>
 
