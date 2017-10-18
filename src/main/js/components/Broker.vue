@@ -29,11 +29,11 @@
 </template>
 <script>
   import axios from '../services/AxiosService'
+  import notificationService from '../services/NotificationService'
   export default {
     data: function () {
       return {
-        broker: [],
-        errors: []
+        broker: []
       }
     },
     created: function () {
@@ -42,9 +42,7 @@
         .then(response => {
           this.broker = response.data
         })
-        .catch(e => {
-          this.errors.push(e)
-        })
+        .catch(e => notificationService.notifyError(`Broker ${brokerId} load failed: ${e.message}`))
     }
   }
 </script>

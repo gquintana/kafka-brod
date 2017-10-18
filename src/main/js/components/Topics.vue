@@ -10,11 +10,11 @@
 
 <script>
   import axios from '../services/AxiosService'
+  import notificationService from '../services/NotificationService'
   export default {
     data: function () {
       return {
-        topics: [],
-        errors: []
+        topics: []
       }
     },
     created: function () {
@@ -22,9 +22,7 @@
         .then(response => {
           this.topics = response.data.map(t => { return { name: t } })
         })
-        .catch(e => {
-          this.errors.push(e)
-        })
+        .catch(e => notificationService.notifyError(`Topics load failed: ${e.message}`))
     },
     methods: {
       topicClicked: function (topic) {

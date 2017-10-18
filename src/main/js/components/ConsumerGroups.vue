@@ -9,11 +9,11 @@
 
 <script>
   import axios from '../services/AxiosService'
+  import notificationService from '../services/NotificationService'
   export default {
     data: function () {
       return {
-        groups: [],
-        errors: []
+        groups: []
       }
     },
     created: function () {
@@ -21,9 +21,7 @@
         .then(response => {
           this.groups = response.data.map(g => { return { id: g } })
         })
-        .catch(e => {
-          this.errors.push(e)
-        })
+        .catch(e => notificationService.notifyError(`Consumer Groups load failed: ${e.message}`))
     },
     methods: {
       groupClicked: function (group) {

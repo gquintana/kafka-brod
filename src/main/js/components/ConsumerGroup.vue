@@ -34,6 +34,8 @@
 <script>
   import axios from '../services/AxiosService'
   import Octicon from 'vue-octicon/components/Octicon.vue'
+  import notificationService from '../services/NotificationService'
+
   function isValidLag (lag) {
     return lag === 0 || lag > 0
   }
@@ -72,13 +74,12 @@
         memberFields: [ 'client_id', 'client_host', 'member_id', 'partition_count', 'lag_total' ],
         topics: [],
         topicFields: [ 'name', 'partition_count', 'lag_total' ],
-        selectedMember: null,
-        errors: []
+        selectedMember: null
       }
     },
     components: { Octicon },
     created: function () {
-      let groupId = this.$route.params.id
+      const groupId = this.$route.params.id
       axios.get(`groups/` + groupId)
         .then(response => {
           const group = response.data
@@ -91,11 +92,8 @@
           this.topics = Array.from(partitions.reduce(partitionByTopicReducer, new Map()).values())
           this.group = group
           this.selectedMember = null
-          console.log(this.topics)
         })
-        .catch(e => {
-          this.errors.push(e)
-        })
+        .catch(e => notificationService.notifyError(`Consumer Group ${groupId} load failed: ${e.message}`))
     },
     methods: {
       memberClicked: function (member) {

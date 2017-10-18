@@ -9,6 +9,7 @@
         <b-nav-item to="/groups" active-class="active" exact><octicon name="organization"/> Consumer Groups</b-nav-item>
       </b-nav>
     </b-navbar>
+    <notification/>
     <div class="main-content">
       <router-view></router-view>
     </div>
@@ -17,9 +18,10 @@
 
 <script>
   import Octicon from 'vue-octicon/components/Octicon.vue'
+  import Notification from './components/Notification.vue'
   export default {
     name: 'app',
-    components: { Octicon }
+    components: { Octicon, Notification }
   }
 </script>
 
