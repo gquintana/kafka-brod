@@ -52,7 +52,7 @@
   }
 
   function partitionByTopicReducer (topicMap, partition) {
-    let topic = topicMap.get(partition.topic)
+    let topic = topicMap.get(partition.topic_name)
     if (topic) {
       topic.partition_count++
       topic.lag_total = sumLag(topic.lag_total, partition.lag)
@@ -62,7 +62,7 @@
         partition_count: 1,
         lag_total: partition.lag
       }
-      topicMap.set(partition.topic, topic)
+      topicMap.set(partition.topic_name, topic)
     }
     return topicMap
   }
