@@ -1,7 +1,9 @@
 package com.github.gquintana.kafka.brod.broker;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.SortedMap;
 
 public class Broker {
     private int id;
@@ -13,6 +15,7 @@ public class Broker {
     private Boolean controller;
     private Properties config;
     private Boolean available;
+    private SortedMap<String, Object> jmxMetrics;
 
     public Broker() {
     }
@@ -91,5 +94,13 @@ public class Broker {
 
     public void setAvailable(Boolean available) {
         this.available = available;
+    }
+
+    public Map<String, Object> getJmxMetrics() {
+        return jmxMetrics;
+    }
+
+    public void setJmxMetrics(SortedMap<String, Object> jmxMetrics) {
+        this.jmxMetrics = jmxMetrics;
     }
 }

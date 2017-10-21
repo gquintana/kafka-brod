@@ -1,17 +1,19 @@
 package com.github.gquintana.kafka.brod.jmx;
 
 import com.github.gquintana.kafka.brod.util.Strings;
+import scala.collection.mutable.StringBuilder;
 
-import javax.management.*;
+import javax.management.Attribute;
+import javax.management.JMException;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
 import javax.management.remote.JMXConnector;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 
 public class JmxConnection implements AutoCloseable {
@@ -31,45 +33,55 @@ public class JmxConnection implements AutoCloseable {
         }
     }
 
-    public Object getAttribute(String mBeanName, String attributeName) {
-        try {
-            ObjectName objectName = new ObjectName(mBeanName);
-            return mBeanServerConnection.getAttribute(objectName, attributeName);
-        } catch (IOException | JMException e) {
-            throw new JmxException("Failed to get " + mBeanName + " " + attributeName, e);
-        }
-    }
-
     public Map<String, Object> getAttributes(String mBeanName, String... attributeNames) {
         try {
             ObjectName objectName = new ObjectName(mBeanName);
-            return mBeanServerConnection.getAttributes(objectName, attributeNames).stream()
-                .map(o -> (Attribute) o)
-                .filter(a -> a.getValue() != null)
-                .collect(toMap(new AttributeKeyFunction(objectName), Attribute::getValue));
+            String keyPrefix = buildKeyPrefix(objectName);
+            AttributesVisitor visitor = new AttributesVisitor();
+            for(Object attribute: mBeanServerConnection.getAttributes(objectName, attributeNames)) {
+                visitor.visit(keyPrefix, (Attribute) attribute);
+            }
+            return visitor.result;
         } catch (IOException | JMException e) {
             throw new JmxException("Failed to get " + mBeanName + " " + attributeNames, e);
         }
     }
 
-    private static class AttributeKeyFunction implements Function<Attribute, String> {
-        private final String keyDomain;
-        private final String keyObject;
-        private AttributeKeyFunction(ObjectName objectName) {
-            keyDomain = Strings.toSnakeCase(objectName.getDomain());
-            String lKeyObject = objectName.getKeyProperty("name");
-            if (lKeyObject == null) {
-                lKeyObject = objectName.getKeyPropertyListString();
-            }
-            lKeyObject = Strings.toSnakeCase(lKeyObject);
-            keyObject = lKeyObject;
+    private static class AttributesVisitor {
+        private final Map<String, Object> result = new HashMap<>();
+
+        private void visit(String keyPrefix, Attribute attribute) {
+            visit(keyPrefix + Strings.toSnakeCase(attribute.getName()), attribute.getValue());
         }
 
-        @Override
-        public String apply(Attribute attribute) {
-            String keyAttribute = attribute.getName();
-            return Stream.of(keyDomain, keyObject, keyAttribute).collect(joining("."));
+        private void visit(String key, Object value) {
+            if (value == null) {
+                return;
+            }
+            if (value instanceof Number || value instanceof String || value instanceof Boolean) {
+                result.put(key, value);
+            } else if (value instanceof CompositeData) {
+                CompositeData compositeValue = (CompositeData) value;
+                for (String compositeValueField : compositeValue.getCompositeType().keySet()) {
+                    visit(key + "." + compositeValueField, compositeValue.get(compositeValueField));
+                }
+            }
         }
+    }
+
+    private static String buildKeyPrefix(ObjectName objectName) {
+        StringBuilder keyPrefixBuilder = new StringBuilder()
+            .append(Strings.toSnakeCase(objectName.getDomain()))
+            .append('.');
+        String type = objectName.getKeyProperty("type");
+        if (type != null) {
+            keyPrefixBuilder.append(Strings.toSnakeCase(type)).append('.');
+        }
+        String name = objectName.getKeyProperty("name");
+        if (name != null) {
+            keyPrefixBuilder.append(Strings.toSnakeCase(name)).append('.');
+        }
+        return keyPrefixBuilder.toString();
     }
 
     public Map<String, Object> getRateAttributes(String mBeanName) {

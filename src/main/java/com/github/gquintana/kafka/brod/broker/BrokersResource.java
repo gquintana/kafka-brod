@@ -15,16 +15,19 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Optional;
 
 @Api(tags = {"broker"})
 @Produces(MediaType.APPLICATION_JSON)
 public class BrokersResource {
     private final Resources resources;
     private final BrokerService brokerService;
+    private final BrokerJmxService brokerJmxService;
 
-    public BrokersResource(Resources resources, BrokerService brokerService) {
+    public BrokersResource(Resources resources, BrokerService brokerService, BrokerJmxService brokerJmxService) {
         this.resources = resources;
         this.brokerService = brokerService;
+        this.brokerJmxService = brokerJmxService;
     }
 
     /**
@@ -48,6 +51,8 @@ public class BrokersResource {
     })
     @Path("{id}")
     public Response getBroker(@PathParam("id") int id) {
-        return Responses.of(brokerService.getBroker(id));
+        Optional<Broker> optBroker = brokerService.getBroker(id);
+        optBroker = optBroker.map(b -> brokerJmxService.enrich(b));
+        return Responses.of(optBroker);
     }
 }

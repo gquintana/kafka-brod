@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.github.gquintana.kafka.brod.broker.BrokerJmxService;
 import com.github.gquintana.kafka.brod.broker.BrokerService;
 import com.github.gquintana.kafka.brod.cache.CacheControlResponseFilter;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupService;
+import com.github.gquintana.kafka.brod.jmx.JmxService;
 import com.github.gquintana.kafka.brod.security.BasicAuthRequestFilter;
 import com.github.gquintana.kafka.brod.security.CorsResponseFilter;
 import com.github.gquintana.kafka.brod.security.FileBasedSecurityService;
@@ -40,6 +42,8 @@ public class KafkaBrodApplication implements AutoCloseable {
     private PartitionService partitionService;
     private ConsumerGroupService consumerGroupService;
     private SecurityService securityService;
+    private JmxService jmxService;
+    private BrokerJmxService brokerJmxService;
 
     public KafkaBrodApplication(Configuration configuration) {
         this.configuration = configuration;
@@ -53,7 +57,8 @@ public class KafkaBrodApplication implements AutoCloseable {
         kafkaService = new KafkaService(
             configuration.getAsString("kafka.servers").get(),
             configuration.getAsString("kafka.clientId").orElse("kafka-brod"));
-
+        // TODO JMX Auth
+        jmxService = new JmxService(null, null);
 
         objectMapper();
 
@@ -65,6 +70,7 @@ public class KafkaBrodApplication implements AutoCloseable {
             securityService = null;
         }
         brokerService = new BrokerService(zookeeperService, objectMapper, configuration.getAsInteger("kafka.connectionTimeout").orElse(1000), kafkaService);
+        brokerJmxService = new BrokerJmxService(jmxService);
         topicService = new TopicService(zookeeperService);
         partitionService = new PartitionService(zookeeperService, kafkaService);
         consumerGroupService = new ConsumerGroupService(kafkaService);
@@ -91,6 +97,10 @@ public class KafkaBrodApplication implements AutoCloseable {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, configuration.getAsBoolean("http.json.pretty").orElse(false));
         return objectMapper;
+    }
+
+    public BrokerJmxService brokerJmxService() {
+        return brokerJmxService;
     }
 
     private static class InstanceObjectResolver<T> implements ContextResolver<T> {

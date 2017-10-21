@@ -19,7 +19,7 @@ public class Resources {
     public Resources(KafkaBrodApplication application) {
         this.application = application;
         this.applicationResource = new KafkaBrodResource(this);
-        brokersResource = new BrokersResource(this, application.brokerService());
+        brokersResource = new BrokersResource(this, application.brokerService(), application.brokerJmxService());
         topicsResource = new TopicsResource(this, application.topicService());
         consumerGroupsResource = new ConsumerGroupsResource(this, application.consumerGroupService());
         apiResource = new ApiResource(this);

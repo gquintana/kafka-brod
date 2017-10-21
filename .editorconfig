@@ -14,5 +14,8 @@ trim_trailing_whitespace = false
 [*.java]
 indent_size = 4
 
+[*.vue, *.js]
+indent_size = 2
+
 [*.xml]
 indent_size = 4
