@@ -22,17 +22,19 @@ public class JmxServiceTest {
 
     private static Process jmxAppProcess;
     private JmxService jmxService = new JmxService(null, null);
+    private static int jmxAppPort;
 
     @BeforeClass
     public static void setUpClass() throws IOException, InterruptedException {
         File targetDir = new File("target");
-        jmxAppProcess = JmxApp.startProcess(targetDir, 4321);
+        jmxAppPort = JmxApp.findAvailablePort();
+        jmxAppProcess = JmxApp.startProcess(targetDir, jmxAppPort);
     }
 
     @Test
     public void testConnect() {
         // When
-        try(JmxConnection jmxConnection = jmxService.connect("localhost", 4321)) {
+        try(JmxConnection jmxConnection = jmxService.connect("localhost", jmxAppPort)) {
             assertNotNull(jmxConnection);
             assertThat(jmxConnection.getId(), not(isEmptyOrNullString()));
         }
@@ -41,7 +43,7 @@ public class JmxServiceTest {
     @Test
     public void testGetAttributes() {
         // When
-        try(JmxConnection jmxConnection = jmxService.connect("localhost", 4321)) {
+        try(JmxConnection jmxConnection = jmxService.connect("localhost", jmxAppPort)) {
             Map<String, Object> attributes = jmxConnection.getAttributes("java.lang:type=OperatingSystem", "SystemLoadAverage", "OpenFileDescriptorCount");
             assertNotNull(attributes.get("java_lang.operating_system.system_load_average"));
             assertNotNull(attributes.get("java_lang.operating_system.open_file_descriptor_count"));
@@ -51,7 +53,7 @@ public class JmxServiceTest {
     @Test
     public void testGetCompositeAttributes() {
         // When
-        try(JmxConnection jmxConnection = jmxService.connect("localhost", 4321)) {
+        try(JmxConnection jmxConnection = jmxService.connect("localhost", jmxAppPort)) {
             Map<String, Object> attributes = jmxConnection.getAttributes("java.lang:type=Memory", "HeapMemoryUsage", "NonHeapMemoryUsage");
             assertNotNull(attributes.get("java_lang.memory.non_heap_memory_usage.used"));
             assertNotNull(attributes.get("java_lang.memory.heap_memory_usage.committed"));

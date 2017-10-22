@@ -73,4 +73,19 @@ public class JmxApp {
         }
         return process;
     }
+
+    private static final int BASE_JMX_PORT = 9876;
+
+    public static int findAvailablePort() throws IOException {
+        IOException lastExc = null;
+        for (int port = BASE_JMX_PORT; port < BASE_JMX_PORT + 100; port++) {
+            try (ServerSocket serverSocket = new ServerSocket(port)) {
+                return port;
+            } catch (IOException e) {
+                // Port not available
+                lastExc = e;
+            }
+        }
+        throw lastExc;
+    }
 }

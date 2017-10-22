@@ -11,6 +11,7 @@
     <!-- Loggers -->
     <logger name="kafka"><level value="WARN"/></logger>
     <logger name="org.apache.kafka"><level value="WARN"/></logger>
+    <logger name="org.apache.kafka.clients.NetworkClient"><level value="ERROR"/></logger>
     <logger name="org.apache.zookeeper"><level value="WARN"/></logger>
     <logger name="org.I0Itec.zkclient"><level value="WARN"/></logger>
     <root>
