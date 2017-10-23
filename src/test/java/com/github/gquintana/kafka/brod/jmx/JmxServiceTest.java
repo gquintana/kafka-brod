@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 public class JmxServiceTest {
 
     private static Process jmxAppProcess;
-    private JmxService jmxService = new JmxService(null, null);
+    private JmxService jmxService = new JmxService();
     private static int jmxAppPort;
 
     @BeforeClass
@@ -34,7 +34,7 @@ public class JmxServiceTest {
     @Test
     public void testConnect() {
         // When
-        try(JmxConnection jmxConnection = jmxService.connect("localhost", jmxAppPort)) {
+        try(JmxConnection jmxConnection = jmxService.connect("localhost", jmxAppPort, null)) {
             assertNotNull(jmxConnection);
             assertThat(jmxConnection.getId(), not(isEmptyOrNullString()));
         }
@@ -43,7 +43,7 @@ public class JmxServiceTest {
     @Test
     public void testGetAttributes() {
         // When
-        try(JmxConnection jmxConnection = jmxService.connect("localhost", jmxAppPort)) {
+        try(JmxConnection jmxConnection = jmxService.connect("localhost", jmxAppPort, null)) {
             Map<String, Object> attributes = jmxConnection.getAttributes("java.lang:type=OperatingSystem", "SystemLoadAverage", "OpenFileDescriptorCount");
             assertNotNull(attributes.get("java_lang.operating_system.system_load_average"));
             assertNotNull(attributes.get("java_lang.operating_system.open_file_descriptor_count"));
@@ -53,7 +53,7 @@ public class JmxServiceTest {
     @Test
     public void testGetCompositeAttributes() {
         // When
-        try(JmxConnection jmxConnection = jmxService.connect("localhost", jmxAppPort)) {
+        try(JmxConnection jmxConnection = jmxService.connect("localhost", jmxAppPort, null)) {
             Map<String, Object> attributes = jmxConnection.getAttributes("java.lang:type=Memory", "HeapMemoryUsage", "NonHeapMemoryUsage");
             assertNotNull(attributes.get("java_lang.memory.non_heap_memory_usage.used"));
             assertNotNull(attributes.get("java_lang.memory.heap_memory_usage.committed"));

@@ -8,6 +8,7 @@ import com.github.gquintana.kafka.brod.broker.BrokerJmxService;
 import com.github.gquintana.kafka.brod.broker.BrokerService;
 import com.github.gquintana.kafka.brod.cache.CacheControlResponseFilter;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupService;
+import com.github.gquintana.kafka.brod.jmx.JmxConfiguration;
 import com.github.gquintana.kafka.brod.jmx.JmxService;
 import com.github.gquintana.kafka.brod.security.BasicAuthRequestFilter;
 import com.github.gquintana.kafka.brod.security.CorsResponseFilter;
@@ -57,8 +58,7 @@ public class KafkaBrodApplication implements AutoCloseable {
         kafkaService = new KafkaService(
             configuration.getAsString("kafka.servers").get(),
             configuration.getAsString("kafka.clientId").orElse("kafka-brod"));
-        // TODO JMX Auth
-        jmxService = new JmxService(null, null);
+        jmxService = new JmxService();
 
         objectMapper();
 
@@ -70,7 +70,11 @@ public class KafkaBrodApplication implements AutoCloseable {
             securityService = null;
         }
         brokerService = new BrokerService(zookeeperService, objectMapper, configuration.getAsInteger("kafka.connectionTimeout").orElse(1000), kafkaService);
-        brokerJmxService = new BrokerJmxService(jmxService);
+        JmxConfiguration brokerJmxConfiguration = new JmxConfiguration(
+            configuration.getAsBoolean("kafka.jmx.ssl").orElse(false),
+            configuration.getAsString("kafka.jmx.user").orElse(null),
+            configuration.getAsString("kafka.jmx.password").orElse(null));
+        brokerJmxService = new BrokerJmxService(jmxService, brokerJmxConfiguration);
         topicService = new TopicService(zookeeperService);
         partitionService = new PartitionService(zookeeperService, kafkaService);
         consumerGroupService = new ConsumerGroupService(kafkaService);
