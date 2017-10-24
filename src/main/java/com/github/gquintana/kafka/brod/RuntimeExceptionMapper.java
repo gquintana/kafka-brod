@@ -13,14 +13,13 @@ public class RuntimeExceptionMapper implements ExceptionMapper<RuntimeException>
     @Override
     public Response toResponse(RuntimeException ex) {
         LOGGER.error("Runtime exception", ex);
-        Error error = new Error();
-        error.setMessage(ex.getMessage());
-        error.setClassName(ex.getClass().getName());
+        int status;
         if (ex instanceof WebApplicationException) {
-            error.setStatus(((WebApplicationException) ex).getResponse().getStatus());
+            status = ((WebApplicationException) ex).getResponse().getStatus();
         } else {
-            error.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+            status = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
         }
+        Error error = new Error(ex.getMessage(), ex.getClass().getName(), status);
         return Response.status(error.getStatus())
             .entity(error)
             .build();

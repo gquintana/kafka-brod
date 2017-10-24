@@ -7,6 +7,8 @@ import com.github.gquintana.kafka.brod.ZookeeperService;
 import kafka.admin.AdminUtils;
 import kafka.server.ConfigType;
 import kafka.utils.ZkUtils;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.kafka.clients.admin.DescribeClusterResult;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
@@ -153,6 +155,7 @@ public class BrokerService {
         return broker;
     }
 
+    @Getter @Setter
     private static class Controller {
         private int brokerid;
         public int getBrokerid() {

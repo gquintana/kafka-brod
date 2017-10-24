@@ -51,7 +51,9 @@ public class TopicResource {
     @ApiOperation(value = "Create/update topic")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createOrUpdateTopic(Topic topic) {
-        topic.setName(topicName);
+        if (topicName.equals(topic.getName())) {
+            throw new WebApplicationException("Invalid topic name", Response.Status.BAD_REQUEST);
+        }
         if (topicService.existTopic(topicName)) {
             topicService.updateTopic(topic);
         } else {

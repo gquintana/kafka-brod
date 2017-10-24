@@ -13,13 +13,14 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Properties;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class EmbeddedZookeeper {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedZookeeper.class);
     private final ZooKeeperServerMain server = new ZooKeeperServerMain();
     private ServerCnxnFactory serverCnxnFactory;
-    private final Executor executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final File dataDir;
 
     public EmbeddedZookeeper(File dataDir) {
@@ -84,6 +85,7 @@ public class EmbeddedZookeeper {
         if (serverCnxFactory != null) {
             serverCnxFactory.shutdown();
         }
+        executor.shutdown();
     }
 
     private void runServer(ServerConfig configuration) {

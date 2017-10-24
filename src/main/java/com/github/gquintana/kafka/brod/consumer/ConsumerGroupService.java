@@ -92,8 +92,7 @@ public class ConsumerGroupService {
     }
 
     private ConsumerGroup convertToConsumerGroup(String groupId, AdminClient.ConsumerGroupSummary groupSummary) {
-        ConsumerGroup group = new ConsumerGroup();
-        group.setGroupId(groupId);
+        ConsumerGroup group = new ConsumerGroup(groupId);
         group.setProtocol(groupSummary.productPrefix());
         group.setState(groupSummary.state());
         group.setAssignmentStrategy(groupSummary.assignmentStrategy());
@@ -122,9 +121,7 @@ public class ConsumerGroupService {
     }
 
     private ConsumerPartition convertToConsumerPartition(TopicPartition topicPartition, Map<TopicPartition, Long> consumerOffsets, Map<TopicPartition, Long> topicOffsets) {
-        ConsumerPartition partition = new ConsumerPartition();
-        partition.setTopicName(topicPartition.topic());
-        partition.setId(topicPartition.partition());
+        ConsumerPartition partition = new ConsumerPartition(topicPartition.topic(), topicPartition.partition());
         partition.setCommitedOffset(consumerOffsets.get(topicPartition));
         partition.setEndOffset(topicOffsets.get(topicPartition));
         return partition;
