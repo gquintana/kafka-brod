@@ -3,11 +3,13 @@ package com.github.gquintana.kafka.brod.broker;
 import com.github.gquintana.kafka.brod.Resources;
 import com.github.gquintana.kafka.brod.Responses;
 import com.github.gquintana.kafka.brod.cache.CacheControl;
+import com.github.gquintana.kafka.brod.security.Roles;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -36,6 +38,7 @@ public class BrokersResource {
     @GET
     @ApiOperation(value = "List broker ids")
     @CacheControl("max-age=60")
+    @RolesAllowed({Roles.USER})
     public List<Broker> getBrokers() {
         return brokerService.getBrokers();
     }
@@ -50,6 +53,7 @@ public class BrokersResource {
         @ApiResponse(code = 404, message = "Broker not found")
     })
     @Path("{id}")
+    @RolesAllowed({Roles.USER})
     public Response getBroker(@PathParam("id") int id) {
         Optional<Broker> optBroker = brokerService.getBroker(id);
         optBroker = optBroker.map(b -> brokerJmxService.enrich(b));

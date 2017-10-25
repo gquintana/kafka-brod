@@ -2,6 +2,7 @@ package com.github.gquintana.kafka.brod;
 
 import com.github.gquintana.kafka.brod.broker.BrokersResource;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupsResource;
+import com.github.gquintana.kafka.brod.security.UsersResource;
 import com.github.gquintana.kafka.brod.topic.TopicsResource;
 import io.swagger.annotations.Api;
 
@@ -30,4 +31,8 @@ public class ApiResource {
         return resources.consumerGroupsResource();
     }
 
+    @Path("users")
+    public UsersResource getUsers() {
+        return resources.usersResource();
+    }
 }

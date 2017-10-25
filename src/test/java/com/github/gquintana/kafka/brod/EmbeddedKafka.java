@@ -119,7 +119,7 @@ public class EmbeddedKafka {
             LOGGER.info("Polling for messages");
             ConsumerRecords<Long, String> records = consumer.poll(pollTimeout / 10L);
             for (ConsumerRecord<Long, String> record : records) {
-                LOGGER.info("Found message {} {}", record.key(), record.value());
+                LOGGER.debug("Found message {} {}", record.key(), record.value());
                 messages.add(record.value());
             }
 //                consumer.commitSync();

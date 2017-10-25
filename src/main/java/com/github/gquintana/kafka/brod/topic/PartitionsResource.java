@@ -3,11 +3,13 @@ package com.github.gquintana.kafka.brod.topic;
 import com.github.gquintana.kafka.brod.Resources;
 import com.github.gquintana.kafka.brod.Responses;
 import com.github.gquintana.kafka.brod.broker.Broker;
+import com.github.gquintana.kafka.brod.security.Roles;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -31,6 +33,7 @@ public class PartitionsResource {
 
     @GET
     @ApiOperation(value = "List topic partitions")
+    @RolesAllowed({Roles.USER})
     public List<Partition> getPartitions() {
         return partitionService.getPartitions(topicName);
     }
@@ -42,6 +45,7 @@ public class PartitionsResource {
         @ApiResponse(code = 200, message = "Topic partition found", response = Topic.class),
         @ApiResponse(code = 404, message = "Topic partition not found")
     })
+    @RolesAllowed({Roles.USER})
     public Response getPartitions(@PathParam("id") int partitionId) {
         return Responses.of(partitionService.getPartition(topicName, partitionId));
     }

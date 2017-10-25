@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Hello from '@/components/Hello'
+import Login from '@/components/Login'
 import Brokers from '@/components/Brokers'
 import Broker from '@/components/Broker'
 import Topics from '@/components/Topics'
@@ -9,13 +10,19 @@ import ConsumerGroups from '@/components/ConsumerGroups'
 import ConsumerGroup from '@/components/ConsumerGroup'
 
 Vue.use(Router)
+import notificationService from '../services/NotificationService'
 
-export default new Router({
+const router = new Router({
   routes: [
     {
       path: '/',
       name: 'Hello',
       component: Hello
+    },
+    {
+      path: '/login',
+      name: 'Login',
+      component: Login
     },
     {
       path: '/brokers',
@@ -49,3 +56,7 @@ export default new Router({
     }
   ]
 })
+
+notificationService.subscribeLogin(() => router.push({name: 'Login'}))
+
+export default router

@@ -8,8 +8,7 @@
 </template>
 
 <script>
-  import axios from '../services/AxiosService'
-  import notificationService from '../services/NotificationService'
+  import axiosService from '../services/AxiosService'
   export default {
     data: function () {
       return {
@@ -17,11 +16,11 @@
       }
     },
     created: function () {
-      axios.get(`groups`)
+      axiosService.axios.get(`groups`)
         .then(response => {
           this.groups = response.data.map(g => { return { id: g } })
         })
-        .catch(e => notificationService.notifyError(`Consumer Groups load failed: ${e.message}`))
+        .catch(e => axiosService.helper.handleError(`Consumer Groups load failed`, e))
     },
     methods: {
       groupClicked: function (group) {

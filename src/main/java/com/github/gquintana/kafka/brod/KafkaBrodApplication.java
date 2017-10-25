@@ -10,12 +10,11 @@ import com.github.gquintana.kafka.brod.cache.CacheControlResponseFilter;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupService;
 import com.github.gquintana.kafka.brod.jmx.JmxConfiguration;
 import com.github.gquintana.kafka.brod.jmx.JmxService;
-import com.github.gquintana.kafka.brod.security.BasicAuthRequestFilter;
-import com.github.gquintana.kafka.brod.security.CorsResponseFilter;
-import com.github.gquintana.kafka.brod.security.FileBasedSecurityService;
-import com.github.gquintana.kafka.brod.security.SecurityService;
+import com.github.gquintana.kafka.brod.security.*;
 import com.github.gquintana.kafka.brod.topic.PartitionService;
 import com.github.gquintana.kafka.brod.topic.TopicService;
+import io.jsonwebtoken.Jwt;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.listing.ApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
@@ -42,9 +41,10 @@ public class KafkaBrodApplication implements AutoCloseable {
     private JerseyServer jerseyServer;
     private PartitionService partitionService;
     private ConsumerGroupService consumerGroupService;
-    private SecurityService securityService;
+    private UserService userService;
     private JmxService jmxService;
     private BrokerJmxService brokerJmxService;
+    private JwtService jwtService;
 
     public KafkaBrodApplication(Configuration configuration) {
         this.configuration = configuration;
@@ -59,15 +59,20 @@ public class KafkaBrodApplication implements AutoCloseable {
             configuration.getAsString("kafka.servers").get(),
             configuration.getAsString("kafka.clientId").orElse("kafka-brod"));
         jmxService = new JmxService();
+        jwtService = new JwtService(
+            configuration.getAsString("http.security.jwt.issuer").orElse("kafka-brod"),
+            configuration.getAsString("http.security.jwt.signatureAlgorithm").map(String::toUpperCase).map(SignatureAlgorithm::forName).orElse(SignatureAlgorithm.HS256),
+            null
+        );
 
         objectMapper();
 
         try {
-            Class<? extends SecurityService> securityServiceClass = configuration.getAsClass("http.security.service.class")
-                .orElse(FileBasedSecurityService.class);
-            securityService = instantiate(securityServiceClass, new Class[]{Configuration.class}, new Object[]{configuration.getAsConfiguration("http.security")});
+            Class<? extends UserService> securityServiceClass = configuration.getAsClass("http.security.service.class")
+                .orElse(FileBasedUserService.class);
+            userService = instantiate(securityServiceClass, new Class[]{Configuration.class}, new Object[]{configuration.getAsConfiguration("http.security")});
         } catch (ReflectiveOperationException e) {
-            securityService = null;
+            userService = null;
         }
         brokerService = new BrokerService(zookeeperService, objectMapper, configuration.getAsInteger("kafka.connectionTimeout").orElse(1000), kafkaService);
         JmxConfiguration brokerJmxConfiguration = new JmxConfiguration(
@@ -152,9 +157,9 @@ public class KafkaBrodApplication implements AutoCloseable {
 
         Resources resources = new Resources(this);
 
-        if (configuration.getAsBoolean("http.security.basicAuth.enabled").orElse(false) && securityService != null) {
-            LOGGER.info("Basic Auth security enabled with service {}", securityService.getClass().getSimpleName());
-            BasicAuthRequestFilter filter = new BasicAuthRequestFilter("UTF-8", securityService);
+        if (configuration.getAsBoolean("http.security.enabled").orElse(false) && userService != null) {
+            LOGGER.info("Security enabled with service {}", userService.getClass().getSimpleName());
+            UserSecurityRequestFilter filter = new UserSecurityRequestFilter("UTF-8", userService, jwtService);
             resourceConfig.register(filter);
             resourceConfig.register(RolesAllowedDynamicFeature.class);
         }
@@ -195,6 +200,14 @@ public class KafkaBrodApplication implements AutoCloseable {
 
     public ConsumerGroupService consumerGroupService() {
         return consumerGroupService;
+    }
+
+    public UserService userService() {
+        return userService;
+    }
+
+    public JwtService jwtService() {
+        return jwtService;
     }
 
     @Override

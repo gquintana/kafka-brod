@@ -1,5 +1,6 @@
 package com.github.gquintana.kafka.brod.security;
 
+import io.jsonwebtoken.JwtException;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -10,24 +11,11 @@ import javax.ws.rs.core.SecurityContext;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-public class BasicAuthRequestFilterTest {
-    @Test
-    public void testMissingAuthorizationHeader() throws Exception {
-        // Given
-        BasicAuthRequestFilter filter = new BasicAuthRequestFilter("UTF-8", null);
-        ContainerRequestContext request = mock(ContainerRequestContext.class);
-        // When
-        try {
-            filter.filter(request);
-            fail("Exception expected");
-        } catch (Exception e) {
-        }
-    }
-
+public class UserSecurityRequestFilterTest {
     @Test
     public void testNotBasicAuthorizationHeader() throws Exception {
         // Given
-        BasicAuthRequestFilter filter = new BasicAuthRequestFilter("UTF-8", null);
+        UserSecurityRequestFilter filter = new UserSecurityRequestFilter("UTF-8", null, null);
         ContainerRequestContext request = mock(ContainerRequestContext.class);
         when(request.getHeaderString(eq("Authorization"))).thenReturn("Other abcde");
         // When
@@ -41,7 +29,7 @@ public class BasicAuthRequestFilterTest {
     @Test
     public void testNoUserNamePasswordAuthorizationHeader() throws Exception {
         // Given
-        BasicAuthRequestFilter filter = new BasicAuthRequestFilter("UTF-8", null);
+        UserSecurityRequestFilter filter = new UserSecurityRequestFilter("UTF-8", null, null);
         ContainerRequestContext request = mock(ContainerRequestContext.class);
         when(request.getHeaderString(eq("Authorization"))).thenReturn("Basic YWJjZGU=");
         // When
@@ -55,8 +43,9 @@ public class BasicAuthRequestFilterTest {
     @Test
     public void testAuthenticationFailed() throws Exception {
         // Given
-        FileBasedSecurityService securityService = mock(FileBasedSecurityService.class);
-        BasicAuthRequestFilter filter = new BasicAuthRequestFilter("UTF-8", securityService);
+        UserService securityService = mock(UserService.class);
+        JwtService jwtService = mock(JwtService.class);
+        UserSecurityRequestFilter filter = new UserSecurityRequestFilter("UTF-8", securityService, jwtService);
         ContainerRequestContext request = mock(ContainerRequestContext.class);
         when(request.getHeaderString(eq("Authorization"))).thenReturn("Basic dXNlcjpwYXNz");
         when(securityService.authenticate(eq("user"), eq("pass"))).thenReturn(false);
@@ -72,8 +61,9 @@ public class BasicAuthRequestFilterTest {
     @Test
     public void testAuthenticationSucceeded() throws Exception {
         // Given
-        FileBasedSecurityService securityService = mock(FileBasedSecurityService.class);
-        BasicAuthRequestFilter filter = new BasicAuthRequestFilter("UTF-8", securityService);
+        UserService securityService = mock(UserService.class);
+        JwtService jwtService = mock(JwtService.class);
+        UserSecurityRequestFilter filter = new UserSecurityRequestFilter("UTF-8", securityService, jwtService);
         ContainerRequestContext request = mock(ContainerRequestContext.class);
         when(request.getHeaderString(eq("Authorization"))).thenReturn("Basic dXNlcjpwYXNz");
         when(securityService.authenticate(eq("user"), eq("pass"))).thenReturn(true);
@@ -86,5 +76,40 @@ public class BasicAuthRequestFilterTest {
         assertNotNull(securityContextCaptor.getValue());
         assertThat(securityContextCaptor.getValue().getUserPrincipal().getName(), Matchers.equalTo("user"));
 
+    }
+
+    @Test
+    public void testJwtTokenValid() throws Exception {
+        // Given
+        UserService securityService = mock(UserService.class);
+        JwtService jwtService = mock(JwtService.class);
+        UserSecurityRequestFilter filter = new UserSecurityRequestFilter("UTF-8", securityService, jwtService);
+        ContainerRequestContext request = mock(ContainerRequestContext.class);
+        when(request.getHeaderString(eq("Authorization"))).thenReturn("Bearer token");
+        when(jwtService.parseToken("token")).thenReturn("user");
+        // When
+        filter.filter(request);
+        // Then
+        ArgumentCaptor<SecurityContext> securityContextCaptor = ArgumentCaptor.forClass(SecurityContext.class);
+        verify(request).setSecurityContext(securityContextCaptor.capture());
+        assertNotNull(securityContextCaptor.getValue());
+        assertThat(securityContextCaptor.getValue().getUserPrincipal().getName(), Matchers.equalTo("user"));
+    }
+
+    @Test
+    public void testJwtTokenInvalid() throws Exception {
+        // Given
+        UserService securityService = mock(UserService.class);
+        JwtService jwtService = mock(JwtService.class);
+        UserSecurityRequestFilter filter = new UserSecurityRequestFilter("UTF-8", securityService, jwtService);
+        ContainerRequestContext request = mock(ContainerRequestContext.class);
+        when(request.getHeaderString(eq("Authorization"))).thenReturn("Bearer token");
+        when(jwtService.parseToken("token")).thenThrow(new JwtException("Invalid token"));
+        // When
+        try {
+            filter.filter(request);
+            fail("Exception expected");
+        } catch (Exception e) {
+        }
     }
 }

@@ -3,12 +3,12 @@ package com.github.gquintana.kafka.brod.security;
 import javax.ws.rs.core.SecurityContext;
 import java.security.Principal;
 
-class BasicAuthSecurityContext implements SecurityContext {
-    private final SecurityService securityService;
+class UserSecurityContext implements SecurityContext {
+    private final UserService userService;
     private final String userName;
 
-    public BasicAuthSecurityContext(SecurityService securityService, String userName) {
-        this.securityService = securityService;
+    public UserSecurityContext(UserService userService, String userName) {
+        this.userService = userService;
         this.userName = userName;
     }
 
@@ -23,7 +23,7 @@ class BasicAuthSecurityContext implements SecurityContext {
 
     @Override
     public boolean isUserInRole(String role) {
-        return securityService.hasRole(userName, role);
+        return userService.hasRole(userName, role);
     }
 
     @Override
@@ -33,6 +33,6 @@ class BasicAuthSecurityContext implements SecurityContext {
 
     @Override
     public String getAuthenticationScheme() {
-        return "Basic Auth";
+        return SecurityContext.BASIC_AUTH;
     }
 }
