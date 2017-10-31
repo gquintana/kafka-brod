@@ -12,6 +12,8 @@ public class Partition {
     private Long beginningOffset;
     private Long endOffset;
     private List<Replica> replicas;
+    private Long size;
+    private Long numSegments;
 
     public Long getRecords() {
         if (beginningOffset == null || endOffset == null) {

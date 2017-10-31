@@ -35,7 +35,7 @@
         <b-col sm="10">
           <b-table :items="topicPartitions" :fields="topicPartitionsFields" striped>
             <template slot="replicas" scope="data">
-              <span v-for="replica of data.item.replicas" :key="replica.broker_id">
+              <span v-for="replica of data.item.replicas" :key="replica.broker_id" class="topic-partition">
                 <octicon name="heart" v-if="replica.leader"/>
                 <router-link :to="{name:'Broker', params:{id: replica.broker_id}}"><a>{{ replica.broker_id }}</a></router-link>
                 <octicon name="issue-reopened" v-if="!replica.in_sync"/>
@@ -56,7 +56,7 @@
       return {
         topic: [],
         topicPartitions: [],
-        topicPartitionsFields: [ 'id', 'beginning_offset', 'end_offset', 'records', 'replicas' ]
+        topicPartitionsFields: [ 'id', 'beginning_offset', 'end_offset', 'records', 'replicas', 'size', 'num_segments' ]
       }
     },
     components: { Octicon },
@@ -74,3 +74,15 @@
     }
   }
 </script>
+
+<style scoped>
+.topic-partition {
+  display: inline-block;
+  text-align: right;
+  border: solid 1px #e9ecef;
+  margin: 1px;
+  padding: 1px;
+  background-color: white;
+  width: 30px;
+}
+</style>

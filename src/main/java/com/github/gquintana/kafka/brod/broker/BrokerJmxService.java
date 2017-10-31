@@ -1,15 +1,15 @@
 package com.github.gquintana.kafka.brod.broker;
 
 import com.github.gquintana.kafka.brod.jmx.*;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.TreeMap;
-
+@Slf4j
 public class BrokerJmxService {
     private final JmxService jmxService;
     private final JmxConfiguration jmxConfiguration;
-    private static final Logger LOGGER = LoggerFactory.getLogger(BrokerJmxService.class);
     private final JmxQuery jmxQuery = new JmxQuery.Builder()
         .withJavaAttributes()
         .withJavaCmsGcAttributes()

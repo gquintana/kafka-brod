@@ -17,6 +17,9 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.toMap;
 
 public class JmxConnection implements AutoCloseable {
+    /**
+     * JMX connector is null for local connections
+     */
     private final JMXConnector jmxConnector;
     private final MBeanServerConnection mBeanServerConnection;
 
@@ -26,6 +29,9 @@ public class JmxConnection implements AutoCloseable {
     }
 
     public String getId() {
+        if (jmxConnector == null) {
+            return null;
+        }
         try {
             return this.jmxConnector.getConnectionId();
         } catch (IOException e) {
@@ -90,6 +96,9 @@ public class JmxConnection implements AutoCloseable {
 
     @Override
     public void close() {
+        if (jmxConnector == null) {
+            return;
+        }
         try {
             jmxConnector.close();
         } catch (IOException e) {

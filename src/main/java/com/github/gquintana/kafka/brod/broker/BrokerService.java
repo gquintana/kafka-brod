@@ -114,7 +114,7 @@ public class BrokerService {
                 broker.setProtocol(endpoints1.get(0).protocol);
             }
             broker.setEndpoints(jsonBroker.getEndpoints());
-            Optional<Integer> controllerId = getController();
+            Optional<Integer> controllerId = getControllerId();
             if (controllerId.isPresent()) {
                 broker.setController(id == controllerId.get());
             }
@@ -158,17 +158,11 @@ public class BrokerService {
     @Getter @Setter
     private static class Controller {
         private int brokerid;
-        public int getBrokerid() {
-            return brokerid;
-        }
-        public void setBrokerid(int brokerid) {
-            this.brokerid = brokerid;
-        }
     }
     /**
      * Get broker elected as controller
      */
-    public Optional<Integer> getController() {
+    private Optional<Integer> getControllerId() {
         String json = zookeeperService.getData("/controller");
         if (json == null) {
             return Optional.empty();
@@ -179,6 +173,10 @@ public class BrokerService {
         } catch (IOException e) {
             throw new KafkaBrodException("Failed to read or parse controller info", e);
         }
+    }
+
+    public Optional<Broker> getControllerBroker() {
+        return getControllerId().flatMap(this::getBroker);
     }
 
     /**

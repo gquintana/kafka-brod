@@ -40,7 +40,7 @@ public class Resources {
     }
 
     public PartitionsResource partitionsResource(String topic) {
-        return new PartitionsResource(this, application.partitionService(), topic);
+        return new PartitionsResource(this, application.partitionService(), application.partitionJmxService(), topic);
     }
 
     public ConsumerGroupsResource consumerGroupsResource() {

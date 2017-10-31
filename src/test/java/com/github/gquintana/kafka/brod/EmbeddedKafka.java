@@ -2,6 +2,7 @@ package com.github.gquintana.kafka.brod;
 
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
+import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -27,11 +28,13 @@ public class EmbeddedKafka {
     private KafkaServerStartable server;
     private final int id;
     private final int port;
+    private final Integer jmxPort;
     private final File logDir;
 
     public EmbeddedKafka(int id, File logDir) {
         this.id = id;
         this.port = 9092 + id;
+        this.jmxPort = id == 0 ? 9999 : null;
         this.logDir = logDir;
     }
 
@@ -65,9 +68,14 @@ public class EmbeddedKafka {
         server.startup();
     }
 
-    public Producer<Long, String> createProducer() {
+    private Map<String, Object> createCommonConfig() {
         Map<String, Object> producerConfig = new HashMap<>();
         producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + port);
+        return producerConfig;
+    }
+
+    public Producer<Long, String> createProducer() {
+        Map<String, Object> producerConfig = createCommonConfig();
         producerConfig.put(ProducerConfig.ACKS_CONFIG, "all");
         producerConfig.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
         producerConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -94,8 +102,7 @@ public class EmbeddedKafka {
     }
 
     public org.apache.kafka.clients.consumer.Consumer<Long, String> createConsumer(String groupId) {
-        Map<String, Object> consumerConfig = new HashMap<>();
-        consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + port);
+        Map<String, Object> consumerConfig = createCommonConfig();
         consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         consumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
         consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -136,8 +143,7 @@ public class EmbeddedKafka {
     }
 
     public void seekToBeggining(String topic, String groupId) {
-        Map<String, Object> consumerConfig = new HashMap<>();
-        consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + port);
+        Map<String, Object> consumerConfig = createCommonConfig();
         consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         consumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
         consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -151,6 +157,14 @@ public class EmbeddedKafka {
                 topicPartitions = consumer.assignment();
             }
             consumer.seekToBeginning(topicPartitions);
+        }
+    }
+
+    public void createTopic(String topicName, int partitions, int replicationFactor) throws ExecutionException, InterruptedException {
+        try(AdminClient client = AdminClient.create(createCommonConfig())) {
+            NewTopic request = new NewTopic(topicName, partitions, (short) replicationFactor);
+            CreateTopicsResult response = client.createTopics(Collections.singleton(request));
+            response.all().get();
         }
     }
 }

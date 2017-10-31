@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.*;
@@ -107,7 +108,8 @@ public class BrokerServiceTest {
     @Test
     public void testController() throws Exception {
         // When
-        int controllerId = brokerService.getController().get();
+        Optional<Broker> controller = brokerService.getControllerBroker();
+        int controllerId = controller.get().getId();
         // Then
         assertThat(controllerId, equalTo(0));
 

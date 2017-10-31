@@ -14,6 +14,7 @@ import com.github.gquintana.kafka.brod.security.BasicAuthRequestFilter;
 import com.github.gquintana.kafka.brod.security.CorsResponseFilter;
 import com.github.gquintana.kafka.brod.security.FileBasedSecurityService;
 import com.github.gquintana.kafka.brod.security.SecurityService;
+import com.github.gquintana.kafka.brod.topic.PartitionJmxService;
 import com.github.gquintana.kafka.brod.topic.PartitionService;
 import com.github.gquintana.kafka.brod.topic.TopicService;
 import io.swagger.jaxrs.config.BeanConfig;
@@ -45,6 +46,7 @@ public class KafkaBrodApplication implements AutoCloseable {
     private SecurityService securityService;
     private JmxService jmxService;
     private BrokerJmxService brokerJmxService;
+    private PartitionJmxService partitionJmxService;
 
     public KafkaBrodApplication(Configuration configuration) {
         this.configuration = configuration;
@@ -77,6 +79,7 @@ public class KafkaBrodApplication implements AutoCloseable {
         brokerJmxService = new BrokerJmxService(jmxService, brokerJmxConfiguration);
         topicService = new TopicService(zookeeperService);
         partitionService = new PartitionService(zookeeperService, kafkaService);
+        partitionJmxService = new PartitionJmxService(jmxService, () -> brokerService.getControllerBroker().orElse(null), brokerJmxConfiguration);
         consumerGroupService = new ConsumerGroupService(kafkaService);
 
         swaggerConfig();
@@ -105,6 +108,10 @@ public class KafkaBrodApplication implements AutoCloseable {
 
     public BrokerJmxService brokerJmxService() {
         return brokerJmxService;
+    }
+
+    public PartitionJmxService partitionJmxService() {
+        return partitionJmxService;
     }
 
     private static class InstanceObjectResolver<T> implements ContextResolver<T> {

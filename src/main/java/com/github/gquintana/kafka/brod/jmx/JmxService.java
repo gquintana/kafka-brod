@@ -11,6 +11,7 @@ import javax.naming.Context;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.security.auth.login.Configuration;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,5 +38,9 @@ public class JmxService {
         } catch (IOException|SecurityException e) {
             throw new JmxException("JMX connection to " + host + ":" + port + " failed", e);
         }
+    }
+
+    public JmxConnection connectLocally() {
+        return new JmxConnection(null, ManagementFactory.getPlatformMBeanServer());
     }
 }
