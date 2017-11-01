@@ -12,3 +12,6 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.iml
+
+node/
+dist/
