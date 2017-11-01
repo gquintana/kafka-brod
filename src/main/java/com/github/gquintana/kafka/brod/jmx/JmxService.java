@@ -1,7 +1,5 @@
 package com.github.gquintana.kafka.brod.jmx;
 
-import com.sun.jndi.rmi.registry.RegistryContext;
-
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
@@ -9,7 +7,6 @@ import javax.management.remote.JMXServiceURL;
 import javax.management.remote.rmi.RMIConnectorServer;
 import javax.naming.Context;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
-import javax.security.auth.login.Configuration;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;

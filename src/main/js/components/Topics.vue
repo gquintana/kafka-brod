@@ -9,8 +9,7 @@
 </template>
 
 <script>
-  import axios from '../services/AxiosService'
-  import notificationService from '../services/NotificationService'
+  import axiosService from '../services/AxiosService'
   export default {
     data: function () {
       return {
@@ -18,11 +17,11 @@
       }
     },
     created: function () {
-      axios.get(`topics`)
+      axiosService.axios.get(`topics`)
         .then(response => {
           this.topics = response.data.map(t => { return { name: t } })
         })
-        .catch(e => notificationService.notifyError(`Topics load failed: ${e.message}`))
+        .catch(e => axiosService.helper.handleError(`Topics load failed`, e))
     },
     methods: {
       topicClicked: function (topic) {

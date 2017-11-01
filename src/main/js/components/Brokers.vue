@@ -13,8 +13,7 @@
 
 <script>
   import Octicon from 'vue-octicon/components/Octicon.vue'
-  import axios from '../services/AxiosService'
-  import notificationService from '../services/NotificationService'
+  import axiosService from '../services/AxiosService'
   export default {
     data: function () {
       return {
@@ -24,11 +23,11 @@
     },
     components: { Octicon },
     created: function () {
-      axios.get(`brokers`)
+      axiosService.axios.get(`brokers`)
         .then(response => {
           this.brokers = response.data
         })
-        .catch(e => notificationService.notifyError(`Brokers load failed: ${e.message}`))
+        .catch(e => axiosService.helper.handleError('Brokers load failed', e))
     },
     methods: {
       brokerClicked: function (broker) {

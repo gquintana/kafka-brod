@@ -2,12 +2,14 @@ package com.github.gquintana.kafka.brod.consumer;
 
 import com.github.gquintana.kafka.brod.Resources;
 import com.github.gquintana.kafka.brod.Responses;
+import com.github.gquintana.kafka.brod.security.Roles;
 import com.github.gquintana.kafka.brod.topic.Topic;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -37,6 +39,7 @@ public class ConsumerGroupResource {
         @ApiResponse(code = 200, message = "Consumer group found", response = ConsumerGroup.class),
         @ApiResponse(code = 404, message = "Consumer group not found")
     })
+    @RolesAllowed({Roles.USER})
     public Response getGroup(@QueryParam("topic") String topic) {
         return Responses.of(groupService.getGroup(groupId, topic));
     }

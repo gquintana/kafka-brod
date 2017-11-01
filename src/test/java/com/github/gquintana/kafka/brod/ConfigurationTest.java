@@ -1,6 +1,6 @@
 package com.github.gquintana.kafka.brod;
 
-import com.github.gquintana.kafka.brod.security.FileBasedSecurityService;
+import com.github.gquintana.kafka.brod.security.FileBasedUserService;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.*;
@@ -50,7 +50,7 @@ public class ConfigurationTest {
         Configuration securityConfig = configuration.getAsConfiguration("http.security");
         // Then
         assertThat(securityConfig, notNullValue());
-        assertThat(securityConfig.getAsBoolean("basicAuth.enabled").get(), notNullValue());
+        assertThat(securityConfig.getAsBoolean("enabled").get(), notNullValue());
     }
 
     @Test
@@ -61,6 +61,6 @@ public class ConfigurationTest {
         configuration.load("brod.properties");
         Class securityServiceClass = configuration.getAsClass("http.security.service.class").get();
         // Then
-        assertThat(securityServiceClass, equalTo(FileBasedSecurityService.class));
+        assertThat(securityServiceClass, equalTo(FileBasedUserService.class));
     }
 }

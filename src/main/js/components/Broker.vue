@@ -35,8 +35,7 @@
   </div>
 </template>
 <script>
-  import axios from '../services/AxiosService'
-  import notificationService from '../services/NotificationService'
+  import axiosService from '../services/AxiosService'
   import numeral from 'numeral'
 
   function formatJmxMetric (jmxMetric) {
@@ -59,11 +58,11 @@
     },
     created: function () {
       let brokerId = this.$route.params.id
-      axios.get(`brokers/` + brokerId)
+      axiosService.axios.get(`brokers/` + brokerId)
         .then(response => {
           this.broker = response.data
         })
-        .catch(e => notificationService.notifyError(`Broker ${brokerId} load failed: ${e.message}`))
+        .catch(e => axiosService.helper.handleError(`Broker ${brokerId} load failed`))
     },
     computed: {
       brokerJmxMetrics () {

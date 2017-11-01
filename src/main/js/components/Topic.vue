@@ -48,9 +48,8 @@
   </div>
 </template>
 <script>
-  import axios from '../services/AxiosService'
+  import axiosService from '../services/AxiosService'
   import Octicon from 'vue-octicon/components/Octicon.vue'
-  import notificationService from '../services/NotificationService'
   export default {
     data: function () {
       return {
@@ -62,15 +61,15 @@
     components: { Octicon },
     created: function () {
       const topicName = this.$route.params.name
-      axios.get(`topics/` + topicName)
+      axiosService.axios.get(`topics/` + topicName)
         .then(response => {
           this.topic = response.data
-          return axios.get(`topics/` + topicName + '/partitions')
+          return axiosService.axios.get(`topics/` + topicName + '/partitions')
         })
         .then(response => {
           this.topicPartitions = response.data
         })
-        .catch(e => notificationService.notifyError(`Topic ${topicName} load failed: ${e.message}`))
+        .catch(e => axiosService.helper.handleError(`Topic ${topicName} load failed`, e))
     }
   }
 </script>

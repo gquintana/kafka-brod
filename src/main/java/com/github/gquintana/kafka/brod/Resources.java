@@ -3,6 +3,8 @@ package com.github.gquintana.kafka.brod;
 import com.github.gquintana.kafka.brod.broker.BrokersResource;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupResource;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupsResource;
+import com.github.gquintana.kafka.brod.security.UserResource;
+import com.github.gquintana.kafka.brod.security.UsersResource;
 import com.github.gquintana.kafka.brod.topic.PartitionsResource;
 import com.github.gquintana.kafka.brod.topic.TopicResource;
 import com.github.gquintana.kafka.brod.topic.TopicsResource;
@@ -15,6 +17,7 @@ public class Resources {
     private final ConsumerGroupsResource consumerGroupsResource;
     private final StaticResource uiResource;
     private final ApiResource apiResource;
+    private final UsersResource usersResource;
 
     public Resources(KafkaBrodApplication application) {
         this.application = application;
@@ -24,7 +27,7 @@ public class Resources {
         consumerGroupsResource = new ConsumerGroupsResource(this, application.consumerGroupService());
         apiResource = new ApiResource(this);
         uiResource = new StaticResource();
-
+        usersResource = new UsersResource(this);
     }
 
     public BrokersResource brokersResource() {
@@ -61,5 +64,13 @@ public class Resources {
 
     public ApiResource apiResource() {
         return apiResource;
+    }
+
+    public UsersResource usersResource() {
+        return usersResource;
+    }
+
+    public UserResource userResource(String userName) {
+        return new UserResource(application.userService(), application.jwtService(), userName);
     }
 }

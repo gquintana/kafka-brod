@@ -1,9 +1,11 @@
 package com.github.gquintana.kafka.brod.consumer;
 
 import com.github.gquintana.kafka.brod.Resources;
+import com.github.gquintana.kafka.brod.security.Roles;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
@@ -24,6 +26,7 @@ public class ConsumerGroupsResource {
      */
     @GET
     @ApiOperation(value = "List consumer groups")
+    @RolesAllowed({Roles.USER})
     public List<String> getGroupIds(@QueryParam("broker_id") Integer brokerId) {
         return brokerId == null ? groupService.getGroupIds() : groupService.getGroupIds(brokerId);
     }

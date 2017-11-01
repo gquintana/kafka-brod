@@ -1,9 +1,11 @@
 package com.github.gquintana.kafka.brod.topic;
 
 import com.github.gquintana.kafka.brod.Resources;
+import com.github.gquintana.kafka.brod.security.Roles;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -27,6 +29,7 @@ public class TopicsResource {
      */
     @GET
     @ApiOperation(value = "List topics")
+    @RolesAllowed({Roles.USER})
     public List<String> getTopics() {
         return topicService.getTopics();
     }

@@ -18,9 +18,8 @@
       }
     },
     created: function () {
-      notificationService.subscribe(function (notification) {
+      notificationService.subscribeNotification(function (notification) {
         if (notification) {
-          console.log(notification)
           this.notification = notification
           this.showNotification = true
         }
