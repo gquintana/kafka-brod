@@ -21,7 +21,7 @@
       notificationService.subscribeNotification(function (notification) {
         if (notification) {
           this.notification = notification
-          this.showNotification = true
+          this.showNotification = (notification.variant !== 'clear')
         }
       }.bind(this))
     },

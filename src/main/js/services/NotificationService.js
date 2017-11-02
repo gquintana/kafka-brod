@@ -16,6 +16,9 @@ class NotificationService {
   subscribeNotification (listener) {
     this.bus.$on('notification', listener)
   }
+  clearNotification () {
+    this.notify('clear', null)
+  }
   subscribeLogin (listener) {
     this.bus.$on('login', listener)
   }

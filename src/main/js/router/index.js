@@ -56,7 +56,9 @@ const router = new Router({
     }
   ]
 })
-
+router.afterEach((to, from) => {
+  notificationService.clearNotification()
+})
 notificationService.subscribeLogin(() => router.push({name: 'Login'}))
 
 export default router
