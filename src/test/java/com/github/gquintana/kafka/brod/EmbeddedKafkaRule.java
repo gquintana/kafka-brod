@@ -3,6 +3,7 @@ package com.github.gquintana.kafka.brod;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
 
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
@@ -50,6 +51,8 @@ public class EmbeddedKafkaRule extends ExternalResource {
         for(EmbeddedKafka kafka:kafkas) {
             kafka.stop();
         }
+        Arrays.fill(kafkas, null);
         zookeeper.stop();
+        zookeeper = null;
     }
 }

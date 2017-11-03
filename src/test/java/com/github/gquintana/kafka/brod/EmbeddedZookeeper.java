@@ -2,6 +2,7 @@ package com.github.gquintana.kafka.brod;
 
 import org.apache.zookeeper.server.ServerCnxnFactory;
 import org.apache.zookeeper.server.ServerConfig;
+import org.apache.zookeeper.server.ZooKeeperServer;
 import org.apache.zookeeper.server.ZooKeeperServerMain;
 import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
 import org.junit.rules.TemporaryFolder;
@@ -15,10 +16,11 @@ import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class EmbeddedZookeeper {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedZookeeper.class);
-    private final ZooKeeperServerMain server = new ZooKeeperServerMain();
+    private ZooKeeperServerMain server;
     private ServerCnxnFactory serverCnxnFactory;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final File dataDir;
@@ -62,34 +64,50 @@ public class EmbeddedZookeeper {
         if (serverCnxnFactory != null) {
             return serverCnxnFactory;
         }
+        if (server == null) {
+            return null;
+        }
         try {
-            Class<? extends ZooKeeperServerMain> serverClass = server.getClass();
-            Field cnxnFactoryField = serverClass.getDeclaredField("cnxnFactory");
-            if (!cnxnFactoryField.isAccessible()) {
-                cnxnFactoryField.setAccessible(true);
-            }
-            Object o = cnxnFactoryField.get(server);
-            if (o == null || o instanceof ServerCnxnFactory) {
-                serverCnxnFactory = (ServerCnxnFactory) o;
-                return serverCnxnFactory;
-            }
-            throw new RuntimeException("Invalid ServerCnxnFactory");
+            serverCnxnFactory = getField(server, "cnxnFactory", ServerCnxnFactory.class);
+            return serverCnxnFactory;
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Get field value using reflection
+     */
+    private static <T> T getField(Object target, String fieldName, Class<T> fieldClass) throws NoSuchFieldException, IllegalAccessException {
+        Class<?> targetClass = target.getClass();
+        Field field = targetClass.getDeclaredField(fieldName);
+        if (!field.isAccessible()) {
+            field.setAccessible(true);
+        }
+        Object fieldValue = field.get(target);
+        return fieldClass.cast(fieldValue);
     }
 
     public void stop() {
         LOGGER.info("Stopping Zookeeper");
         ServerCnxnFactory serverCnxFactory = getServerCnxnFactory();
         if (serverCnxFactory != null) {
+            serverCnxFactory.closeAll();
             serverCnxFactory.shutdown();
         }
         executor.shutdown();
+        try {
+            executor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        this.serverCnxnFactory = null;
+        this.server = null;
     }
 
     private void runServer(ServerConfig configuration) {
         try {
+            server = new ZooKeeperServerMain();
             server.runFromConfig(configuration);
         } catch (IOException e) {
             LOGGER.error("ZooKeeper Failed", e);

@@ -18,10 +18,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class EmbeddedKafka {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedKafka.class);
@@ -59,6 +62,7 @@ public class EmbeddedKafka {
 
     public void start() throws IOException {
         LOGGER.info("Starting Kafka " + id + " on port " + port);
+        writeMetaProperties();
         Properties properties = TestResources.getResourceAsProperties("/kafka.properties");
         properties.setProperty("broker.id", Integer.toString(id));
         properties.setProperty("log.dirs", logDir.getAbsolutePath());
@@ -66,6 +70,18 @@ public class EmbeddedKafka {
         KafkaConfig config = new KafkaConfig(properties);
         server = new KafkaServerStartable(config);
         server.startup();
+    }
+
+    /**
+     * Write meta.properties to avoid warnings
+     */
+    private void writeMetaProperties() throws IOException {
+        Properties properties = new Properties();
+        properties.setProperty("broker.id", Integer.toString(id));
+        properties.setProperty("version", "0");
+        try(FileOutputStream outputStream = new FileOutputStream(new File(logDir, "meta.properties"))) {
+            properties.store(outputStream, "");
+        }
     }
 
     private Map<String, Object> createCommonConfig() {
@@ -141,6 +157,7 @@ public class EmbeddedKafka {
         LOGGER.info("Stopping Kafka");
         server.shutdown();
         server.awaitShutdown();
+        server = null;
     }
 
     public void seekToBeggining(String topic, String groupId) {
