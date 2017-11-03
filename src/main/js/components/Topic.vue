@@ -50,12 +50,15 @@
 <script>
   import axiosService from '../services/AxiosService'
   import Octicon from 'vue-octicon/components/Octicon.vue'
+  const TOPIC_PARTITIONS_FIELDS = [ 'id', 'beginning_offset', 'end_offset', 'records', 'replicas' ]
+  const TOPIC_PARTITIONS_FIELDS_JMX = TOPIC_PARTITIONS_FIELDS.concat([ 'size', 'num_segments' ])
   export default {
     data: function () {
       return {
         topic: [],
         topicPartitions: [],
-        topicPartitionsFields: [ 'id', 'beginning_offset', 'end_offset', 'records', 'replicas', 'size', 'num_segments' ]
+        topicPartitionsFields: [],
+        topicPartitionsJmx: false
       }
     },
     components: { Octicon },
@@ -68,8 +71,14 @@
         })
         .then(response => {
           this.topicPartitions = response.data
+          this.topicPartitionsJmx = this.topicPartitions.filter(p => p.size || p.num_segments) !== undefined
         })
         .catch(e => axiosService.helper.handleError(`Topic ${topicName} load failed`, e))
+    },
+    computed: {
+      topicPartitionsFields: function () {
+        return this.topicPartitionsJmx ? TOPIC_PARTITIONS_FIELDS_JMX : TOPIC_PARTITIONS_FIELDS
+      }
     }
   }
 </script>
