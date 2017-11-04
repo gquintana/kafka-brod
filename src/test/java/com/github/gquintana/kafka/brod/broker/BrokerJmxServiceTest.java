@@ -1,22 +1,17 @@
 package com.github.gquintana.kafka.brod.broker;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.github.gquintana.kafka.brod.EmbeddedKafkaRule;
-import com.github.gquintana.kafka.brod.KafkaService;
-import com.github.gquintana.kafka.brod.ZookeeperService;
 import com.github.gquintana.kafka.brod.jmx.JmxConfiguration;
 import com.github.gquintana.kafka.brod.jmx.JmxConnection;
 import com.github.gquintana.kafka.brod.jmx.JmxException;
 import com.github.gquintana.kafka.brod.jmx.JmxService;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class BrokerJmxServiceTest {
     @ClassRule
@@ -25,17 +20,17 @@ public class BrokerJmxServiceTest {
     @ClassRule
     public static final EmbeddedKafkaRule KAFKA_RULE = new EmbeddedKafkaRule(TEMPORARY_FOLDER, 1);
 
-    private static BrokerJmxService brokerJmxService;
+    private BrokerJmxService brokerJmxService;
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         JmxService jmxService = new JmxService() {
             @Override
             public JmxConnection connect(String host, int port, JmxConfiguration configuration) throws JmxException {
                 return connectLocally();
             }
         };
-        brokerJmxService = new BrokerJmxService(jmxService, new JmxConfiguration(false, null, null));
+        brokerJmxService = new BrokerJmxService(jmxService, new JmxConfiguration(false, null,null, null));
     }
 
     @Test

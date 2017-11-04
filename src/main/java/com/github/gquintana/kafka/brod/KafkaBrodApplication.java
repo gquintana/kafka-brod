@@ -8,6 +8,7 @@ import com.github.gquintana.kafka.brod.broker.BrokerJmxService;
 import com.github.gquintana.kafka.brod.broker.BrokerService;
 import com.github.gquintana.kafka.brod.cache.CacheControlResponseFilter;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupService;
+import com.github.gquintana.kafka.brod.consumer.ConsumerJmxService;
 import com.github.gquintana.kafka.brod.jmx.JmxConfiguration;
 import com.github.gquintana.kafka.brod.jmx.JmxService;
 import com.github.gquintana.kafka.brod.security.*;
@@ -26,8 +27,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.ext.ContextResolver;
 import java.lang.reflect.Constructor;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static java.util.stream.Collectors.toMap;
 
 public class KafkaBrodApplication implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaBrodApplication.class);
@@ -46,6 +50,7 @@ public class KafkaBrodApplication implements AutoCloseable {
     private BrokerJmxService brokerJmxService;
     private PartitionJmxService partitionJmxService;
     private JwtService jwtService;
+    private ConsumerJmxService consumerJmxService;
 
     public KafkaBrodApplication(Configuration configuration) {
         this.configuration = configuration;
@@ -76,20 +81,29 @@ public class KafkaBrodApplication implements AutoCloseable {
             userService = null;
         }
         brokerService = new BrokerService(zookeeperService, objectMapper, configuration.getAsInteger("kafka.connectionTimeout").orElse(1000), kafkaService);
-        JmxConfiguration brokerJmxConfiguration = new JmxConfiguration(
-            configuration.getAsBoolean("kafka.jmx.ssl").orElse(false),
-            configuration.getAsString("kafka.jmx.user").orElse(null),
-            configuration.getAsString("kafka.jmx.password").orElse(null));
+        JmxConfiguration brokerJmxConfiguration = JmxConfiguration.create(configuration, "kafka");
         brokerJmxService = new BrokerJmxService(jmxService, brokerJmxConfiguration);
         topicService = new TopicService(zookeeperService);
         partitionService = new PartitionService(zookeeperService, kafkaService);
         partitionJmxService = new PartitionJmxService(jmxService, () -> brokerService.getControllerBroker().orElse(null), brokerJmxConfiguration);
         consumerGroupService = new ConsumerGroupService(kafkaService);
+        consumerJmxService = new ConsumerJmxService(jmxService, consumerJmxConfigurations());
 
         swaggerConfig();
         resourceConfig();
 
         jerseyServer().run();
+    }
+
+    private Map<String, JmxConfiguration> consumerJmxConfigurations() {
+        final String keyPrefix = "consumer";
+        final String keySuffix = ".jmx.port";
+        Configuration consumerConfig = configuration.getAsConfiguration(keyPrefix);
+        return consumerConfig.getAsMap().keySet().stream()
+            .filter(key -> key.endsWith(keySuffix))
+            .map(key -> key.substring(0, key.length() - keySuffix.length()))
+            .collect(toMap(groupId -> groupId,
+                groupId -> JmxConfiguration.create(configuration, keyPrefix + "." + groupId)));
     }
 
     private JerseyServer jerseyServer() throws ReflectiveOperationException {
@@ -206,6 +220,10 @@ public class KafkaBrodApplication implements AutoCloseable {
 
     public ConsumerGroupService consumerGroupService() {
         return consumerGroupService;
+    }
+
+    public ConsumerJmxService consumerJmxService() {
+        return consumerJmxService;
     }
 
     public UserService userService() {

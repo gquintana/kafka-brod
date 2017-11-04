@@ -36,19 +36,7 @@
 </template>
 <script>
   import axiosService from '../services/AxiosService'
-  import numeral from 'numeral'
-
-  function formatJmxMetric (jmxMetric) {
-    if (jmxMetric.name.indexOf('heap_memory') >= 0 ||
-        jmxMetric.name.endsWith('_size') ||
-        jmxMetric.name.indexOf('.bytes_') >= 0) {
-      // Memory
-      jmxMetric.value = numeral(jmxMetric.value).format('0.000b')
-    } else if (typeof jmxMetric.value === 'number' && !Number.isInteger(jmxMetric.value)) {
-      jmxMetric.value = numeral(jmxMetric.value).format('0.000')
-    }
-    return jmxMetric
-  }
+  import jmxService from '../services/JmxService'
 
   export default {
     data: function () {
@@ -66,13 +54,7 @@
     },
     computed: {
       brokerJmxMetrics () {
-        if (!this.broker || !this.broker.jmx_metrics) {
-          return null
-        }
-        const jmxMetrics = this.broker.jmx_metrics
-        return Object.keys(jmxMetrics).map(k => {
-          return {name: k, value: jmxMetrics[k]}
-        }).map(formatJmxMetric)
+        return jmxService.formatJmxMetrics(this.broker)
       }
     }
   }

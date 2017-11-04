@@ -2,7 +2,9 @@ package com.github.gquintana.kafka.brod;
 
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
-import org.apache.kafka.clients.admin.*;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -18,13 +20,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class EmbeddedKafka {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedKafka.class);
@@ -118,8 +118,15 @@ public class EmbeddedKafka {
     }
 
     public org.apache.kafka.clients.consumer.Consumer<Long, String> createConsumer(String groupId) {
+        return createConsumer(groupId, null);
+    }
+
+    public org.apache.kafka.clients.consumer.Consumer<Long, String> createConsumer(String groupId, String clientId) {
         Map<String, Object> consumerConfig = createCommonConfig();
         consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        if (clientId != null) {
+            consumerConfig.put(ConsumerConfig.CLIENT_ID_CONFIG, clientId);
+        }
         consumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
         consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
@@ -127,6 +134,7 @@ public class EmbeddedKafka {
         consumerConfig.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
         return new KafkaConsumer<>(consumerConfig);
     }
+
     public List<String> consume(String topic, String groupId, long timeout) {
         try (org.apache.kafka.clients.consumer.Consumer<Long, String> consumer = createConsumer(groupId)) {
             consumer.subscribe(Collections.singletonList(topic));

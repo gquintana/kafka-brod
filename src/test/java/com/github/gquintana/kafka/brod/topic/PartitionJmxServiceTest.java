@@ -21,7 +21,7 @@ import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -53,7 +53,7 @@ public class PartitionJmxServiceTest {
                 return connectLocally();
             }
         };
-        partitionJmxService = new PartitionJmxService(jmxService, brokerSupplierMock, new JmxConfiguration(false, null, null));
+        partitionJmxService = new PartitionJmxService(jmxService, brokerSupplierMock, new JmxConfiguration(false,  null, null, null));
     }
 
     @Test

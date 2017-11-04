@@ -7,11 +7,12 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartition;
 
+import java.util.*;
+
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static scala.collection.JavaConverters.*;
-
-import java.util.*;
+import static scala.collection.JavaConverters.asJavaCollection;
+import static scala.collection.JavaConverters.mapAsJavaMap;
 
 public class ConsumerGroupService {
     private static final long TIMEOUT_MS = 10000L;
@@ -103,7 +104,7 @@ public class ConsumerGroupService {
         return consumerSummaries
             .stream()
             .map(c -> convertToConsumer(c, consumerPartitions))
-            .sorted(Comparator.comparing(com.github.gquintana.kafka.brod.consumer.Consumer::getMemberId))
+            .sorted(Comparator.comparing(com.github.gquintana.kafka.brod.consumer.Consumer::getId))
             .collect(toList());
     }
 
@@ -111,7 +112,7 @@ public class ConsumerGroupService {
         com.github.gquintana.kafka.brod.consumer.Consumer member = new com.github.gquintana.kafka.brod.consumer.Consumer();
         member.setClientId(consumerSummary.clientId());
         member.setClientHost(consumerSummary.host());
-        member.setMemberId(consumerSummary.consumerId());
+        member.setId(consumerSummary.consumerId());
         member.setPartitions(asJavaCollection(consumerSummary.assignment()).stream()
             .map(p -> consumerPartitions.get(p))
             .filter(Objects::nonNull)
@@ -131,5 +132,34 @@ public class ConsumerGroupService {
         try(Consumer<String, String> consumer = kafkaService.consumer(groupId)) {
             return consumer.endOffsets(partitions);
         }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Consumer detail
+
+    /**
+     *
+     * @param topic Optional topic name to filter assignments
+     */
+    public Optional<com.github.gquintana.kafka.brod.consumer.Consumer> getConsumer(String groupId, String consumerId, String topic) {
+        // Group
+        AdminClient.ConsumerGroupSummary groupSummary = getGroupSummary(groupId);
+        if (!groupSummary.consumers().isDefined()) {
+            return Optional.empty();
+        }
+        Collection<AdminClient.ConsumerSummary> consumerSummaries =
+            asJavaCollection(groupSummary.consumers().get()).stream()
+                .filter(c -> c.consumerId().equals(consumerId))
+                .limit(1)
+                .collect(toList());
+        // Partitions
+        List<TopicPartition> partitions = getPartitions(consumerSummaries, topic);
+        Map<TopicPartition, Long> consumerOffsets = getGroupOffsets(groupId);
+        Map<TopicPartition, Long> topicOffsets = getPartitionOffset(groupId, partitions);
+        Map<TopicPartition, ConsumerPartition> consumerPartitions = partitions.stream()
+            .collect(toMap((tp) -> tp, (tp) -> convertToConsumerPartition(tp, consumerOffsets, topicOffsets)));
+        // Members
+        List<com.github.gquintana.kafka.brod.consumer.Consumer> consumers = convertToConsumers(consumerSummaries, consumerPartitions);
+        return consumers.stream().findFirst();
     }
 }

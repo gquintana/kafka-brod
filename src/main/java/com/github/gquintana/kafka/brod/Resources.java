@@ -3,6 +3,7 @@ package com.github.gquintana.kafka.brod;
 import com.github.gquintana.kafka.brod.broker.BrokersResource;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupResource;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupsResource;
+import com.github.gquintana.kafka.brod.consumer.ConsumerResource;
 import com.github.gquintana.kafka.brod.security.UserResource;
 import com.github.gquintana.kafka.brod.security.UsersResource;
 import com.github.gquintana.kafka.brod.topic.PartitionsResource;
@@ -72,5 +73,9 @@ public class Resources {
 
     public UserResource userResource(String userName) {
         return new UserResource(application.userService(), application.jwtService(), userName);
+    }
+
+    public ConsumerResource consumerResource(String groupId, String consumerId) {
+        return new ConsumerResource(this, application.consumerGroupService(), application.consumerJmxService(), groupId, consumerId);
     }
 }

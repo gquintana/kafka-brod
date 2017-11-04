@@ -22,39 +22,19 @@
           <b-table striped hover :items="topics" :fields="topicFields"/>
         </b-col>
       </b-row>
-      <b-row v-if="selectedMember">
-        <b-col sm="2"><label>Partitions</label></b-col>
-        <b-col sm="10">
-          <b-table striped hover :items="selectedMember.partitions"/>
-        </b-col>
-      </b-row>
     </b-container>
   </div>
 </template>
 <script>
   import axiosService from '../services/AxiosService'
+  import lagService from '../services/LagService'
   import Octicon from 'vue-octicon/components/Octicon.vue'
-
-  function isValidLag (lag) {
-    return lag === 0 || lag > 0
-  }
-  function sumLag (lag1, lag2) {
-    if (isValidLag(lag1)) {
-      if (isValidLag(lag2)) {
-        return lag1 + lag2
-      } else {
-        return lag1
-      }
-    } else {
-      return lag2
-    }
-  }
 
   function partitionByTopicReducer (topicMap, partition) {
     let topic = topicMap.get(partition.topic_name)
     if (topic) {
       topic.partition_count++
-      topic.lag_total = sumLag(topic.lag_total, partition.lag)
+      topic.lag_total = lagService.sumLag(topic.lag_total, partition.lag)
     } else {
       topic = {
         name: partition.topic_name,
@@ -70,10 +50,9 @@
     data: function () {
       return {
         group: [],
-        memberFields: [ 'client_id', 'client_host', 'member_id', 'partition_count', 'lag_total' ],
+        memberFields: [ 'id', 'client_id', 'client_host', 'partition_count', 'lag_total' ],
         topics: [],
-        topicFields: [ 'name', 'partition_count', 'lag_total' ],
-        selectedMember: null
+        topicFields: [ 'name', 'partition_count', 'lag_total' ]
       }
     },
     components: { Octicon },
@@ -85,18 +64,17 @@
           const partitions = []
           group.members.forEach(member => {
             member.partition_count = member.partitions.length
-            member.lag_total = member.partitions.reduce(sumLag, 0)
+            member.lag_total = lagService.computeTotalLag(member.partitions)
             member.partitions.forEach(partition => partitions.push(partition))
           })
           this.topics = Array.from(partitions.reduce(partitionByTopicReducer, new Map()).values())
           this.group = group
-          this.selectedMember = null
         })
         .catch(e => axiosService.helper.handleError(`Consumer Group ${groupId} load failed`, e))
     },
     methods: {
       memberClicked: function (member) {
-        this.selectedMember = member
+        this.$router.push({ name: 'Consumer', params: { groupId: this.group.group_id, id: member.id } })
       }
     }
 

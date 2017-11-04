@@ -3,7 +3,6 @@ package com.github.gquintana.kafka.brod.consumer;
 import com.github.gquintana.kafka.brod.EmbeddedKafkaRule;
 import com.github.gquintana.kafka.brod.KafkaService;
 import com.github.gquintana.kafka.brod.ZookeeperService;
-import com.github.gquintana.kafka.brod.topic.Topic;
 import com.github.gquintana.kafka.brod.topic.TopicService;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
@@ -16,12 +15,15 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 public class ConsumerGroupServiceTest {
@@ -33,20 +35,24 @@ public class ConsumerGroupServiceTest {
     private static final String TOPIC = "test_group";
     private static final String TOPIC2 = "test_group2";
     private static final int PARTITIONS = 3;
-    private static ConsumerGroupService groupService;
-    private static ZookeeperService zookeeperService;
-    private static TopicService topicService;
-    private static ExecutorService executor = Executors.newFixedThreadPool(6);
-    private static KafkaService kafkaService;
+    private ConsumerGroupService groupService;
+    private ZookeeperService zookeeperService;
+    private TopicService topicService;
+    private ExecutorService executor = Executors.newFixedThreadPool(6);
+    private KafkaService kafkaService;
     private List<TopicConsumerRunnable> runnables = new ArrayList<>();
 
     @BeforeClass
-    public static void setUpClass() throws IOException {
+    public static void setUpClass() throws ExecutionException, InterruptedException {
+        KAFKA_RULE.getKafka().createTopic(TOPIC, PARTITIONS, 1);
+        KAFKA_RULE.getKafka().createTopic(TOPIC2, PARTITIONS, 1);
+    }
+
+    @Before
+    public void setUp() throws IOException {
         zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
         kafkaService = new KafkaService("localhost:9092", "kafka-brod");
         topicService = new TopicService(zookeeperService);
-        topicService.createTopic(new Topic(TOPIC, PARTITIONS, 1, new Properties()));
-        topicService.createTopic(new Topic(TOPIC2, PARTITIONS, 1, new Properties()));
         groupService = new ConsumerGroupService(kafkaService);
     }
 
@@ -55,6 +61,7 @@ public class ConsumerGroupServiceTest {
         TopicConsumerListener listener = new TopicConsumerListener();
         TopicConsumerRunnable runnable = new TopicConsumerRunnable(groupId, topics, listener);
         executor.execute(runnable);
+        runnables.add(runnable);
         listener.waitPartitionsAssigned();
         return consumer;
     }
@@ -84,7 +91,7 @@ public class ConsumerGroupServiceTest {
         assertThat(group.get().getState(), equalTo("Stable"));
         List<com.github.gquintana.kafka.brod.consumer.Consumer> members = group.get().getMembers();
         assertThat(members.size(), is(2));
-        assertThat(members.stream().map(com.github.gquintana.kafka.brod.consumer.Consumer::getMemberId).distinct().collect(toList()).size(), is(2));
+        assertThat(members.stream().map(com.github.gquintana.kafka.brod.consumer.Consumer::getId).distinct().collect(toList()).size(), is(2));
         assertThat(members.stream().map(com.github.gquintana.kafka.brod.consumer.Consumer::getClientId).distinct().collect(toList()).size(), is(2));
         assertThat(members.stream().map(com.github.gquintana.kafka.brod.consumer.Consumer::getClientHost).distinct().collect(toList()).size(), is(1));
         assertThat(members.stream().flatMap(m -> m.getPartitions().stream()).collect(toList()).size(), is(3));
@@ -112,13 +119,27 @@ public class ConsumerGroupServiceTest {
         assertThat(members.stream().flatMap(m -> m.getPartitions().stream()).collect(toList()).size(), is(3*1));
     }
 
+    @Test
+    public void testGetConsumer() throws Exception {
+        // Given
+        String groupId = "get_consumer";
+        startConsumer(groupId, TOPIC);
+        // When
+        Optional<ConsumerGroup> group = groupService.getGroup(groupId);
+        String consumerId = group.get().getMembers().get(0).getId();
+        assertNotNull(consumerId);
+        Optional<com.github.gquintana.kafka.brod.consumer.Consumer> consumer= groupService.getConsumer(groupId, consumerId, null);
+        // Then
+        assertThat(consumer.isPresent(), is(true));
+        assertThat(consumer.get().getId(), equalTo(consumerId));
+        assertThat(consumer.get().getPartitions().size(), is(3));
+        assertThat(consumer.get().getPartitions().stream().map(ConsumerPartition::getTopicName).collect(toSet()).size(), is(1));
+    }
+
     @After
     public void tearDown() {
         runnables.stream().forEach(TopicConsumerRunnable::stop);
-    }
-
-    @AfterClass
-    public static void tearDownClass() throws Exception {
+        runnables.clear();
         executor.shutdown();
         kafkaService.close();
         zookeeperService.close();
@@ -151,7 +172,6 @@ public class ConsumerGroupServiceTest {
 
         public void stop() {
             running.set(false);
-            consumer.close();
         }
     }
 
