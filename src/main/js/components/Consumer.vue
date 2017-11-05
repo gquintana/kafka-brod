@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <h2>Consumer {{ groupId }} {{ consumer.id}}</h2>
-    <b-container v-if="consumer">
+  <b-container>
+    <b-breadcrumb :items="breadcrumb" />
+    <div v-if="consumer">
       <b-row>
         <b-col sm="2"><label>Client Id</label></b-col>
         <b-col sm="3">{{ consumer.client_id }}</b-col>
@@ -22,8 +22,8 @@
           <b-table striped hover :items="consumerJmxMetrics"/>
         </b-col>
       </b-row>
-    </b-container>
-  </div>
+    </div>
+  </b-container>
 </template>
 <script>
   import axiosService from '../services/AxiosService'
@@ -34,6 +34,7 @@
   export default {
     data: function () {
       return {
+        groupId: null,
         consumer: null
       }
     },
@@ -45,6 +46,7 @@
         .then(response => {
           const consumer = response.data
           consumer.lag_total = lagService.computeTotalLag(consumer.partitions)
+          this.groupId = groupId
           this.consumer = consumer
         })
         .catch(e => axiosService.helper.handleError(`Consumer ${consumerId} load failed`, e))
@@ -52,7 +54,27 @@
     computed: {
       consumerJmxMetrics: function () {
         return jmxService.formatJmxMetrics(this.consumer)
+      },
+      breadcrumb: function () {
+        const breadcrumb = [
+          {
+            text: 'Consumer Groups',
+            to: { name: 'ConsumerGroups' }
+          },
+          {
+            text: `Group ${this.groupId}`,
+            to: { name: 'ConsumerGroup', params: { id: this.groupId } }
+          }
+        ]
+        if (this.consumer) {
+          breadcrumb.push({
+            text: `Consumer ${this.consumer.id}`,
+            to: { name: 'Consumer', params: { groupId: this.groupId, id: this.consumer.id } }
+          })
+        }
+        return breadcrumb
       }
+
     }
 
   }

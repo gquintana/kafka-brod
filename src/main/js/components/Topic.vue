@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <h2>Topic {{ topic.name }}</h2>
-    <b-container v-if="topic">
+  <b-container>
+    <b-breadcrumb :items="breadcrumb" />
+    <div v-if="topic">
       <b-row>
         <b-col sm="2"><label>Partitions</label></b-col>
         <b-col sm="1">{{ topic.partitions }}</b-col>
@@ -44,8 +44,8 @@
           </b-table>
         </b-col>
       </b-row>
-    </b-container>
-  </div>
+    </div>
+  </b-container>
 </template>
 <script>
   import axiosService from '../services/AxiosService'
@@ -57,7 +57,6 @@
       return {
         topic: [],
         topicPartitions: [],
-        topicPartitionsFields: [],
         topicPartitionsJmx: false
       }
     },
@@ -76,6 +75,21 @@
         .catch(e => axiosService.helper.handleError(`Topic ${topicName} load failed`, e))
     },
     computed: {
+      breadcrumb: function () {
+        const breadcrumb = [
+          {
+            text: 'Topics',
+            to: { name: 'Topics' }
+          }
+        ]
+        if (this.topic) {
+          breadcrumb.push({
+            text: `Topic ${this.topic.name}`,
+            to: { name: 'Topic', params: { id: this.topic.name } }
+          })
+        }
+        return breadcrumb
+      },
       topicPartitionsFields: function () {
         return this.topicPartitionsJmx ? TOPIC_PARTITIONS_FIELDS_JMX : TOPIC_PARTITIONS_FIELDS
       }

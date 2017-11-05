@@ -6,7 +6,7 @@ import java.util.List;
 
 @Data
 public class ConsumerGroup {
-    private final String groupId;
+    private final String id;
     private String protocol;
     private String state;
     private List<Consumer> members;

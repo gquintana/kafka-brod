@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <h2>Consumer Group {{ group.group_id}}</h2>
-    <b-container v-if="group">
+  <b-container>
+    <b-breadcrumb :items="breadcrumb" />
+    <div v-if="group">
       <b-row>
         <b-col sm="2"><label>Protocol</label></b-col>
         <b-col sm="3">{{ group.protocol }}</b-col>
@@ -22,8 +22,8 @@
           <b-table striped hover :items="topics" :fields="topicFields"/>
         </b-col>
       </b-row>
-    </b-container>
-  </div>
+    </div>
+  </b-container>
 </template>
 <script>
   import axiosService from '../services/AxiosService'
@@ -74,7 +74,24 @@
     },
     methods: {
       memberClicked: function (member) {
-        this.$router.push({ name: 'Consumer', params: { groupId: this.group.group_id, id: member.id } })
+        this.$router.push({ name: 'Consumer', params: { groupId: this.group.id, id: member.id } })
+      }
+    },
+    computed: {
+      breadcrumb: function () {
+        const breadcrumb = [
+          {
+            text: 'Consumer Groups',
+            to: { name: 'ConsumerGroups' }
+          }
+        ]
+        if (this.group) {
+          breadcrumb.push({
+            text: `Group ${this.group.id}`,
+            to: { name: 'ConsumerGroup', params: { id: this.group.id } }
+          })
+        }
+        return breadcrumb
       }
     }
 

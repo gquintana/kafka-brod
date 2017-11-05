@@ -1,14 +1,14 @@
 <template>
-  <div>
-    <h2>Brokers</h2>
-    <b-container v-if="brokers && brokers.length">
+  <b-container >
+    <div v-if="brokers && brokers.length">
+      <b-breadcrumb :items="breadcrumb" />
       <b-table striped hover :items="brokers" :fields="brokerFields" @row-clicked="brokerClicked" class="table-clickable">
         <template slot="controller" scope="data">
           <octicon name="heart" v-if="data.item.controller"/>
         </template>
       </b-table>
-    </b-container>
-  </div>
+    </div>
+  </b-container>
 </template>
 
 <script>
@@ -17,6 +17,12 @@
   export default {
     data: function () {
       return {
+        breadcrumb: [
+          {
+            text: 'Brokers',
+            to: { name: 'Brokers' }
+          }
+        ],
         brokers: [],
         brokerFields: [ 'id', 'host', 'port', 'controller' ]
       }

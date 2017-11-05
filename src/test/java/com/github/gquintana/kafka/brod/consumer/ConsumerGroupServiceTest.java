@@ -87,7 +87,7 @@ public class ConsumerGroupServiceTest {
         Optional<ConsumerGroup> group = groupService.getGroup("get_group");
         // Then
         assertThat(group.isPresent(), is(true));
-        assertThat(group.get().getGroupId(), equalTo("get_group"));
+        assertThat(group.get().getId(), equalTo("get_group"));
         assertThat(group.get().getState(), equalTo("Stable"));
         List<com.github.gquintana.kafka.brod.consumer.Consumer> members = group.get().getMembers();
         assertThat(members.size(), is(2));
@@ -105,7 +105,7 @@ public class ConsumerGroupServiceTest {
         Optional<ConsumerGroup> group = groupService.getGroup("get_group_by_topic");
         // Then
         assertThat(group.isPresent(), is(true));
-        assertThat(group.get().getGroupId(), equalTo("get_group_by_topic"));
+        assertThat(group.get().getId(), equalTo("get_group_by_topic"));
         List<com.github.gquintana.kafka.brod.consumer.Consumer> members = group.get().getMembers();
         assertThat(members.size(), is(1));
         assertThat(members.stream().flatMap(m -> m.getPartitions().stream()).collect(toList()).size(), is(3*2));
@@ -113,7 +113,7 @@ public class ConsumerGroupServiceTest {
         group = groupService.getGroup("get_group_by_topic", TOPIC);
         // Then
         assertThat(group.isPresent(), is(true));
-        assertThat(group.get().getGroupId(), equalTo("get_group_by_topic"));
+        assertThat(group.get().getId(), equalTo("get_group_by_topic"));
         members = group.get().getMembers();
         assertThat(members.size(), is(1));
         assertThat(members.stream().flatMap(m -> m.getPartitions().stream()).collect(toList()).size(), is(3*1));

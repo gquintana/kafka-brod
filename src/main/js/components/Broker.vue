@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <h2>Broker {{ broker.id }}</h2>
-    <b-container v-if="broker">
+  <b-container>
+    <b-breadcrumb :items="breadcrumb" />
+    <div v-if="broker">
       <b-row>
         <b-col sm="1"><label>Host</label></b-col>
         <b-col sm="4">{{ broker.host }}</b-col>
@@ -31,8 +31,8 @@
           </b-table>
         </b-col>
       </b-row>
-    </b-container>
-  </div>
+    </div>
+  </b-container>
 </template>
 <script>
   import axiosService from '../services/AxiosService'
@@ -53,7 +53,22 @@
         .catch(e => axiosService.helper.handleError(`Broker ${brokerId} load failed`))
     },
     computed: {
-      brokerJmxMetrics () {
+      breadcrumb: function () {
+        const breadcrumb = [
+          {
+            text: 'Brokers',
+            to: { name: 'Brokers' }
+          }
+        ]
+        if (this.broker) {
+          breadcrumb.push({
+            text: `Broker ${this.broker.id}`,
+            to: { name: 'Broker', params: { id: this.broker.id } }
+          })
+        }
+        return breadcrumb
+      },
+      brokerJmxMetrics: function () {
         return jmxService.formatJmxMetrics(this.broker)
       }
     }

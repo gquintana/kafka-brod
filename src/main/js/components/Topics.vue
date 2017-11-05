@@ -1,11 +1,10 @@
 <template>
-  <div>
-    <h2>Topics</h2>
-    <b-container v-if="topics && topics.length">
+  <b-container>
+    <b-breadcrumb :items="breadcrumb" />
+    <div v-if="topics && topics.length">
       <b-table striped hover :items="topics" @row-clicked="topicClicked" class="table-clickable"/>
-    </b-container>
-
-  </div>
+    </div>
+  </b-container>
 </template>
 
 <script>
@@ -13,7 +12,13 @@
   export default {
     data: function () {
       return {
-        topics: []
+        topics: [],
+        breadcrumb: [
+          {
+            text: 'Topics',
+            to: { name: 'Topics' }
+          }
+        ]
       }
     },
     created: function () {

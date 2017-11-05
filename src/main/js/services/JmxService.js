@@ -1,4 +1,4 @@
-import numeral from "numeral";
+import numeral from 'numeral'
 
 function formatJmxMetric (jmxMetric) {
   if (jmxMetric.name.indexOf('heap_memory') >= 0 ||
