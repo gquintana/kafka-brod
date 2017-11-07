@@ -53,7 +53,7 @@ public class PartitionJmxServiceTest {
                 return connectLocally();
             }
         };
-        partitionJmxService = new PartitionJmxService(jmxService, brokerSupplierMock, new JmxConfiguration(false,  null, null, null));
+        partitionJmxService = new PartitionJmxService(jmxService, brokerSupplierMock, new JmxConfiguration(false,  null, null, null, 3000));
     }
 
     @Test

@@ -47,7 +47,7 @@ public class ConsumerJmxServiceTest {
         consumer = KAFKA_RULE.getKafka().createConsumer(GROUP_ID, CLIENT_ID);
         consumer.subscribe(asList(TOPIC_NAME));
         Map<String, JmxConfiguration> jmxConfigurations = new HashMap<>();
-        jmxConfigurations.put(GROUP_ID, new JmxConfiguration(false, 8888, null, null));
+        jmxConfigurations.put(GROUP_ID, new JmxConfiguration(false, 8888, null, null, 3000));
         consumerJmxService = new ConsumerJmxService(jmxService, jmxConfigurations);
     }
 

@@ -185,6 +185,7 @@ public class BrokerService {
     private static boolean isAvailable(String host, int port, boolean ssl, int connectTimeout) {
         SocketFactory socketFactory = ssl ? SSLSocketFactory.getDefault() : SocketFactory.getDefault();
         try(Socket socket = socketFactory.createSocket()) {
+            socket.setSoTimeout(connectTimeout);
             socket.connect(new InetSocketAddress(host, port), connectTimeout);
             return socket.isConnected();
         } catch (IOException e) {

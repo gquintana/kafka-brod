@@ -8,9 +8,9 @@
         <b-col sm="1"><label>Port</label></b-col>
         <b-col sm="2">{{ broker.port }}</b-col>
         <b-col sm="1"><label>Controller</label></b-col>
-        <b-col sm="1">{{ broker.controller }}</b-col>
-        <b-col sm="1"><label>Active</label></b-col>
-        <b-col sm="1">{{ broker.active }}</b-col>
+        <b-col sm="1"><octicon v-if="broker.controller" name="heart" /></b-col>
+        <b-col sm="1"><label>Available</label></b-col>
+        <b-col sm="1"><octicon v-if="broker.available" name="pulse" label="available"/></b-col>
       </b-row>
       <b-row>
         <b-col sm="1"><label>Protocol</label></b-col>
@@ -37,8 +37,9 @@
 <script>
   import axiosService from '../services/AxiosService'
   import jmxService from '../services/JmxService'
-
+  import Octicon from 'vue-octicon/components/Octicon.vue'
   export default {
+    components: { Octicon },
     data: function () {
       return {
         broker: null

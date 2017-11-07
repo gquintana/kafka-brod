@@ -6,17 +6,11 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Map;
-import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.joining;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 public class JmxServiceTest {
 
@@ -38,6 +32,11 @@ public class JmxServiceTest {
             assertNotNull(jmxConnection);
             assertThat(jmxConnection.getId(), not(isEmptyOrNullString()));
         }
+    }
+
+    @Test(expected = JmxException.class)
+    public void testConnectNotFound() {
+        JmxConnection jmxConnection = jmxService.connect("localhost", 12345, null);
     }
 
     @Test

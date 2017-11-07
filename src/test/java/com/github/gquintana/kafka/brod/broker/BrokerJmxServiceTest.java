@@ -30,7 +30,7 @@ public class BrokerJmxServiceTest {
                 return connectLocally();
             }
         };
-        brokerJmxService = new BrokerJmxService(jmxService, new JmxConfiguration(false, null,null, null));
+        brokerJmxService = new BrokerJmxService(jmxService, new JmxConfiguration(false, null,null, null, 3000));
     }
 
     @Test
