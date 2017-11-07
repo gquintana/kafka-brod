@@ -16,6 +16,6 @@ function sumLag (lag1, lag2) {
 export default {
   sumLag: sumLag,
   computeTotalLag: function (partitions) {
-    return partitions.reduce(sumLag, 0)
+    return partitions.map(p => p.lag).reduce(sumLag, 0)
   }
 }
