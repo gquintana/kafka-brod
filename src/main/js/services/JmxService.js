@@ -1,9 +1,10 @@
 import numeral from 'numeral'
 
 function formatJmxMetric (jmxMetric) {
-  if (jmxMetric.name.indexOf('heap_memory') >= 0 ||
-    jmxMetric.name.endsWith('_size') ||
-    jmxMetric.name.indexOf('.bytes_') >= 0) {
+  const n = jmxMetric.name
+  if (n.indexOf('heap_memory') >= 0 ||
+        n.endsWith('_size') ||
+        n.indexOf('.bytes_') >= 0) {
     // Memory
     jmxMetric.value = numeral(jmxMetric.value).format('0.000b')
   } else if (typeof jmxMetric.value === 'number' && !Number.isInteger(jmxMetric.value)) {
