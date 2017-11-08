@@ -37,8 +37,8 @@
             <template slot="replicas" scope="data">
               <span v-for="replica of data.item.replicas" :key="replica.broker_id" class="topic-partition">
                 <octicon name="heart" v-if="replica.leader"/>
-                <router-link :to="{name:'Broker', params:{id: replica.broker_id}}"><a>{{ replica.broker_id }}</a></router-link>
                 <octicon name="issue-reopened" v-if="!replica.in_sync"/>
+                <router-link :to="{name:'Broker', params:{id: replica.broker_id}}"><a>{{ replica.broker_id }}</a></router-link>
               </span>
             </template>
           </b-table>
@@ -105,6 +105,6 @@
   margin: 1px;
   padding: 1px;
   background-color: white;
-  width: 30px;
+  min-width: 30px;
 }
 </style>

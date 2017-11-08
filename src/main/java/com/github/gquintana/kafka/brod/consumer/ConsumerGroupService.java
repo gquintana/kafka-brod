@@ -8,6 +8,8 @@ import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartition;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -108,10 +110,18 @@ public class ConsumerGroupService {
             .collect(toList());
     }
 
+    private static Pattern CONSUMER_HOST_PATTERN = Pattern.compile("([\\w-.]+)?/([\\d.]+)");
+
     private com.github.gquintana.kafka.brod.consumer.Consumer convertToConsumer(AdminClient.ConsumerSummary consumerSummary, Map<TopicPartition, ConsumerPartition> consumerPartitions) {
         com.github.gquintana.kafka.brod.consumer.Consumer member = new com.github.gquintana.kafka.brod.consumer.Consumer();
         member.setClientId(consumerSummary.clientId());
-        member.setClientHost(consumerSummary.host());
+        Matcher matcher = CONSUMER_HOST_PATTERN.matcher(consumerSummary.host());
+        if (matcher.matches()) {
+            member.setClientHost(matcher.group(1));
+            member.setClientIp(matcher.group(2));
+        } else {
+            member.setClientHost(consumerSummary.host());
+        }
         member.setId(consumerSummary.consumerId());
         member.setPartitions(asJavaCollection(consumerSummary.assignment()).stream()
             .map(p -> consumerPartitions.get(p))

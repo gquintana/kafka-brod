@@ -26,12 +26,12 @@ public class ConsumerJmxService {
 
     public Consumer enrich(String groupId, Consumer consumer) {
         String jmxHost = consumer.getClientHost();
+        if (jmxHost == null) {
+            jmxHost = consumer.getClientIp();
+        }
         JmxConfiguration jmxConfiguration = jmxConfigurations.get(groupId);
         if (jmxHost == null || jmxConfiguration == null || jmxConfiguration.getPort() == null) {
             return consumer;
-        }
-        if (jmxHost.startsWith("/")) {
-            jmxHost = jmxHost.substring(1);
         }
         try (JmxConnection connection = jmxService.connect(jmxHost, jmxConfiguration.getPort(), jmxConfiguration)) {
             Map<String, Object> jmxMetrics = createJmxQuery(consumer.getClientId()).execute(connection);

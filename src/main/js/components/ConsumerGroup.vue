@@ -64,6 +64,7 @@
           const partitions = []
           group.members.forEach(member => {
             member.partition_count = member.partitions.length
+            member.client_host = member.client_host || member.client_ip
             member.lag_total = lagService.computeTotalLag(member.partitions)
             member.partitions.forEach(partition => partitions.push(partition))
           })

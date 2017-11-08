@@ -42,11 +42,11 @@
     created: function () {
       const groupId = this.$route.params.groupId
       const consumerId = this.$route.params.id
+      this.groupId = groupId
       axiosService.axios.get(`groups/` + groupId + '/consumers/' + consumerId)
         .then(response => {
           const consumer = response.data
           consumer.lag_total = lagService.computeTotalLag(consumer.partitions)
-          this.groupId = groupId
           this.consumer = consumer
         })
         .catch(e => axiosService.helper.handleError(`Consumer ${consumerId} load failed`, e))
