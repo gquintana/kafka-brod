@@ -1,5 +1,5 @@
 <template>
-  <b-container>
+  <b-container fluid>
     <b-breadcrumb :items="breadcrumb" />
     <div v-if="topic">
       <b-row>

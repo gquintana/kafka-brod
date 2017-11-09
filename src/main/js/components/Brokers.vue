@@ -1,5 +1,5 @@
 <template>
-  <b-container >
+  <b-container fluid>
     <div v-if="brokers && brokers.length">
       <b-breadcrumb :items="breadcrumb" />
       <b-table striped hover :items="brokers" :fields="brokerFields" @row-clicked="brokerClicked" class="table-clickable">

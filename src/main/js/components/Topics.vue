@@ -1,5 +1,5 @@
 <template>
-  <b-container>
+  <b-container fluid>
     <b-breadcrumb :items="breadcrumb" />
     <div v-if="topics && topics.length">
       <b-table striped hover :items="topics" @row-clicked="topicClicked" class="table-clickable"/>

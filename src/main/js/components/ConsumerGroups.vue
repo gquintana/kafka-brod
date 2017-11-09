@@ -1,5 +1,5 @@
 <template>
-  <b-container>
+  <b-container fluid>
     <b-breadcrumb :items="breadcrumb" />
     <div v-if="groups && groups.length">
       <b-table striped hover :items="groups" @row-clicked="groupClicked" class="table-clickable"/>
