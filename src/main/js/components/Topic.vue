@@ -55,6 +55,7 @@
   export default {
     data: function () {
       return {
+        topicName: null,
         topic: [],
         topicPartitions: [],
         topicPartitionsJmx: false
@@ -63,9 +64,16 @@
     components: { Octicon },
     created: function () {
       const topicName = this.$route.params.name
+      this.topicName = topicName
       axiosService.axios.get(`topics/` + topicName)
         .then(response => {
           this.topic = response.data
+          const topicPartitions = []
+          for (let partitionId = 0; partitionId < this.topic.partitions; partitionId++) {
+            topicPartitions.push({id: partitionId, replicas: []})
+          }
+          this.topicPartitions = topicPartitions
+          this.topicPartitionsJmx = false
           return axiosService.axios.get(`topics/` + topicName + '/partitions')
         })
         .then(response => {
@@ -82,10 +90,10 @@
             to: { name: 'Topics' }
           }
         ]
-        if (this.topic) {
+        if (this.topicName) {
           breadcrumb.push({
-            text: `Topic ${this.topic.name}`,
-            to: { name: 'Topic', params: { id: this.topic.name } }
+            text: `Topic ${this.topicName}`,
+            to: { name: 'Topic', params: { id: this.topicName } }
           })
         }
         return breadcrumb
