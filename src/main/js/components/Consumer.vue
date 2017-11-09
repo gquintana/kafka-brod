@@ -13,13 +13,17 @@
       <b-row>
         <b-col sm="2"><label>Partitions</label></b-col>
         <b-col sm="10">
-          <b-table striped hover :items="consumer.partitions"/>
+          <b-table striped hover :items="consumer.partitions" :fields="partitionFields">
+            <template slot="topic_name" scope="data">
+              <router-link :to="{name:'Topic', params:{name: data.item.topic_name}}"><a>{{ data.item.topic_name}}</a></router-link>
+            </template>
+          </b-table>
         </b-col>
       </b-row>
       <b-row v-if="consumer.jmx_metrics">
         <b-col sm="2"><label>JMX Metrics</label></b-col>
         <b-col sm="10">
-          <b-table striped hover :items="consumerJmxMetrics"/>
+          <b-table striped hover :items="consumerJmxMetrics" :fields="consumerJmxFields"/>
         </b-col>
       </b-row>
     </div>
@@ -35,7 +39,15 @@
     data: function () {
       return {
         groupId: null,
-        consumer: null
+        consumer: null,
+        partitionFields: [
+          {key: 'topic_name', sortable: true},
+          {key: 'id', tdClass: 'numeric', sortable: true},
+          {key: 'commited_offset', tdClass: 'numeric', sortable: true},
+          {key: 'end_offset', tdClass: 'numeric', sortable: true},
+          {key: 'lag', tdClass: 'numeric', sortable: true}
+        ],
+        consumerJmxFields: jmxService.jmxFields
       }
     },
     components: { Octicon },

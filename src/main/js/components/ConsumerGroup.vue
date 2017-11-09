@@ -19,7 +19,11 @@
       <b-row>
         <b-col sm="2"><label>Topics</label></b-col>
         <b-col sm="10">
-          <b-table striped hover :items="topics" :fields="topicFields"/>
+          <b-table striped hover :items="topics" :fields="topicFields">
+            <template slot="name" scope="data">
+              <router-link :to="{name:'Topic', params:{name: data.item.name}}"><a>{{ data.item.name }}</a></router-link>
+            </template>
+          </b-table>
         </b-col>
       </b-row>
     </div>
@@ -50,9 +54,19 @@
     data: function () {
       return {
         group: [],
-        memberFields: [ 'id', 'client_id', 'client_host', 'partition_count', 'lag_total' ],
+        memberFields: [
+          {key: 'id', sortable: true},
+          {key: 'client_id'},
+          {key: 'client_host'},
+          {key: 'partition_count', tdClass: 'numeric', sortable: true},
+          {key: 'lag_total', tdClass: 'numeric', sortable: true}
+        ],
         topics: [],
-        topicFields: [ 'name', 'partition_count', 'lag_total' ]
+        topicFields: [
+          {key: 'name', sortable: true},
+          {key: 'partition_count', tdClass: 'numeric', sortable: true},
+          {key: 'lag_total', tdClass: 'numeric', sortable: true}
+        ]
       }
     },
     components: { Octicon },

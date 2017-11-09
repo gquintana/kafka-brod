@@ -50,8 +50,17 @@
 <script>
   import axiosService from '../services/AxiosService'
   import Octicon from 'vue-octicon/components/Octicon.vue'
-  const TOPIC_PARTITIONS_FIELDS = [ 'id', 'beginning_offset', 'end_offset', 'records', 'replicas' ]
-  const TOPIC_PARTITIONS_FIELDS_JMX = TOPIC_PARTITIONS_FIELDS.concat([ 'size', 'num_segments' ])
+  const TOPIC_PARTITIONS_FIELDS = [
+    {key: 'id', sortable: true},
+    {key: 'beginning_offset', tdClass: 'numeric'},
+    {key: 'end_offset', tdClass: 'numeric'},
+    {key: 'records', tdClass: 'numeric', sortable: true},
+    {key: 'replicas'}
+  ]
+  const TOPIC_PARTITIONS_FIELDS_JMX = TOPIC_PARTITIONS_FIELDS.concat([
+    {key: 'size', tdClass: 'numeric', sortable: true},
+    {key: 'num_segments', tdClass: 'numeric', sortable: true}
+  ])
   export default {
     data: function () {
       return {

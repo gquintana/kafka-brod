@@ -27,7 +27,7 @@
       <b-row v-if="broker.jmx_metrics">
         <b-col sm="1"><label>JMX Metrics</label></b-col>
         <b-col sm="11">
-          <b-table striped hover :items="brokerJmxMetrics">
+          <b-table striped hover :items="brokerJmxMetrics" :fields="brokerJmxFields">
           </b-table>
         </b-col>
       </b-row>
@@ -42,11 +42,14 @@
     components: { Octicon },
     data: function () {
       return {
-        broker: null
+        brokerId: null,
+        broker: null,
+        brokerJmxFields: jmxService.jmxFields
       }
     },
     created: function () {
-      let brokerId = this.$route.params.id
+      const brokerId = this.$route.params.id
+      this.brokerId = brokerId
       axiosService.axios.get(`brokers/` + brokerId)
         .then(response => {
           this.broker = response.data
@@ -61,10 +64,10 @@
             to: { name: 'Brokers' }
           }
         ]
-        if (this.broker) {
+        if (this.brokerId) {
           breadcrumb.push({
-            text: `Broker ${this.broker.id}`,
-            to: { name: 'Broker', params: { id: this.broker.id } }
+            text: `Broker ${this.brokerId}`,
+            to: { name: 'Broker', params: { id: this.brokerId } }
           })
         }
         return breadcrumb

@@ -24,5 +24,9 @@ function formatJmxMetrics (target) {
 }
 
 export default {
-  formatJmxMetrics: formatJmxMetrics
+  formatJmxMetrics: formatJmxMetrics,
+  jmxFields: [
+    {key: 'name'},
+    {key: 'value', tdClass: 'numeric'}
+  ]
 }

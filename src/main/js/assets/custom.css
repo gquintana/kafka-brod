@@ -5,3 +5,7 @@ label {
 .table-clickable > tbody > tr {
   cursor: pointer;
 }
+
+.numeric {
+  text-align: right;
+}
