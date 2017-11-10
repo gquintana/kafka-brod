@@ -29,8 +29,8 @@ public class ObjectExpirer<T> implements AutoCloseable, Supplier<T> {
         if (object == null || expirationTime < now) {
             oldObject = this.object;
             this.object = supplier.get();
-            this.expirationTime = now + timeToLive;
         }
+        this.expirationTime = now + timeToLive;
         return oldObject;
     }
 

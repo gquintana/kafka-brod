@@ -1,6 +1,5 @@
 package com.github.gquintana.kafka.brod.util;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.util.HashSet;
@@ -12,13 +11,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 public class ObjectExpirerTest {
     private int currentInt = 0;
 
     @Test
-    public void get() throws Exception {
+    public void testDontExpireWhenUsed() throws Exception {
         // Given
         ObjectExpirer<Integer> expiringInt = new ObjectExpirer<>(this::intSupplier, 200L);
         int threads = 4;
@@ -28,12 +28,22 @@ public class ObjectExpirerTest {
             .mapToObj(i -> new UsingIntRunnable(expiringInt))
             .collect(toList());
         runnables.forEach(executorService::submit);
-        Thread.sleep(1000L);
+        Thread.sleep(600L);
         runnables.forEach(r -> r.stop());
         // Then
-        runnables.forEach(r -> {
-            assertThat(r.getInts().size(), Matchers.lessThanOrEqualTo(6));
-        });
+        runnables.forEach(r -> assertThat(r.getInts().size(), equalTo(1)));
+    }
+
+    @Test
+    public void testExpireWhenNotUsed() throws Exception {
+        // Given
+        ObjectExpirer<Integer> expiringInt = new ObjectExpirer<>(this::intSupplier, 200L);
+        // When
+        expiringInt.get();
+        Thread.sleep(400L);
+        int i = expiringInt.get();
+        // Then
+        assertThat(i, equalTo(1));
     }
 
     private Integer intSupplier() {
