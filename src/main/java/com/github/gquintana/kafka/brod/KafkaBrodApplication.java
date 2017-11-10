@@ -63,7 +63,8 @@ public class KafkaBrodApplication implements AutoCloseable {
             configuration.getAsInteger("zookeeper.connectionTimeout").get());
         kafkaService = new KafkaService(
             configuration.getAsString("kafka.servers").get(),
-            configuration.getAsString("kafka.clientId").orElse("kafka-brod"));
+            configuration.getAsString("kafka.clientId").orElse("kafka-brod"),
+            configuration.getAsLong("kafka.connectionMaxIdleMs").orElse(540000L));
         jmxService = new JmxService();
         jwtService = new JwtService(
             configuration.getAsString("http.security.jwt.issuer").orElse("kafka-brod"),

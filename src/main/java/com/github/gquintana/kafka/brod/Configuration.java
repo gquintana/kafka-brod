@@ -96,6 +96,20 @@ public class Configuration {
         return get(key).map(Configuration::toBoolean);
     }
 
+    private static Long toLong(Object obj) {
+        if (obj instanceof Number) {
+            return ((Number) obj).longValue();
+        } else if (obj instanceof String) {
+            return Long.parseLong(((String) obj).trim());
+        } else {
+            throw new KafkaBrodException("Can not convert to Long " + obj);
+        }
+    }
+
+    public Optional<Long> getAsLong(String key) {
+        return get(key).map(Configuration::toLong);
+    }
+
     private static Class toClass(Object obj) {
         if (obj instanceof Class) {
             return ((Class) obj);

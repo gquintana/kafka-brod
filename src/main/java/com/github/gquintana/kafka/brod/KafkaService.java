@@ -1,5 +1,7 @@
 package com.github.gquintana.kafka.brod;
 
+import com.github.gquintana.kafka.brod.util.ObjectExpirer;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -9,23 +11,33 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import scala.Predef;
 import scala.collection.JavaConversions;
 
+import java.io.Closeable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class KafkaService implements AutoCloseable {
     private final String bootstrapServers;
     private final String clientId;
-    private AdminClient adminClient;
-    private kafka.admin.AdminClient scalaAdminClient;
+    private final long maxIdleMs;
+    private final ObjectExpirer<AdminClient> adminClient;
+    private final ObjectExpirer<kafka.admin.AdminClient> scalaAdminClient;
 
     public KafkaService(String bootstrapServers, String clientId) {
+        this(bootstrapServers, clientId, 540000);
+    }
+
+    public KafkaService(String bootstrapServers, String clientId, long maxIdleMs) {
         this.bootstrapServers = bootstrapServers;
+        this.maxIdleMs = maxIdleMs;
         if (clientId == null) {
             clientId = generateClientId();
         }
         this.clientId = clientId;
+        adminClient = new ObjectExpirer<>(this::createAdminClient, maxIdleMs);
+        scalaAdminClient = new ObjectExpirer<>(this::createScalaAdminClient, maxIdleMs);
     }
 
     private static String generateClientId() {
@@ -38,24 +50,30 @@ public class KafkaService implements AutoCloseable {
         return clientId;
     }
 
-    public synchronized AdminClient adminClient() {
-        if (adminClient == null) {
-            Map<String, Object> clientConfig = new HashMap<>();
-            clientConfig.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-            clientConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG, clientId);
-            adminClient = AdminClient.create(clientConfig);
-        }
-        return adminClient;
+    private AdminClient createAdminClient() {
+        LOGGER.info("Connecting to Kafka Client Admin");
+        Map<String, Object> config = new HashMap<>();
+        config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(CommonClientConfigs.CLIENT_ID_CONFIG, clientId);
+        config.put(CommonClientConfigs.CONNECTIONS_MAX_IDLE_MS_CONFIG, maxIdleMs);
+        return AdminClient.create(config);
     }
 
-    public synchronized kafka.admin.AdminClient scalaAdminClient() {
-        if (scalaAdminClient == null) {
-            Map<String, Object> brokerConfig = new HashMap<>();
-            brokerConfig.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-            brokerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG, clientId);
-            scalaAdminClient = kafka.admin.AdminClient.create(JavaConversions.mapAsScalaMap(brokerConfig).toMap(Predef.conforms()));
-        }
-        return scalaAdminClient;
+    private kafka.admin.AdminClient createScalaAdminClient() {
+        LOGGER.info("Connecting to Kafka Internal Admin");
+        Map<String, Object> config = new HashMap<>();
+        config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(CommonClientConfigs.CLIENT_ID_CONFIG, clientId);
+        config.put(CommonClientConfigs.CONNECTIONS_MAX_IDLE_MS_CONFIG, maxIdleMs);
+        return kafka.admin.AdminClient.create(JavaConversions.mapAsScalaMap(config).toMap(Predef.conforms()));
+    }
+
+    public AdminClient adminClient() {
+        return adminClient.get();
+    }
+
+    public kafka.admin.AdminClient scalaAdminClient() {
+        return scalaAdminClient.get();
     }
 
     public Consumer<String, String> consumer(String groupId) {
@@ -72,13 +90,7 @@ public class KafkaService implements AutoCloseable {
 
     @Override
     public synchronized void close() {
-        if (adminClient != null) {
-            adminClient.close();
-            adminClient = null;
-        }
-        if (scalaAdminClient != null) {
-            scalaAdminClient.close();
-            scalaAdminClient = null;
-        }
+        adminClient.close();
+        scalaAdminClient.close();
     }
 }
