@@ -49,4 +49,8 @@ public class Cache<K, V> {
         return Optional.empty();
     }
 
+    public synchronized void remove(K key) {
+        entries.remove(key);
+    }
+
 }

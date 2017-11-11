@@ -4,7 +4,7 @@
     <div v-if="topic">
       <b-row>
         <b-col sm="2"><label>Partitions</label></b-col>
-        <b-col sm="1">{{ topic.partitions }}</b-col>
+        <b-col sm="1">{{ topic.num_partitions }}</b-col>
         <b-col sm="2"><label>Replication factor</label></b-col>
         <b-col sm="1">{{ topic.replication_factor }}</b-col>
         <b-col sm="2"><label>Internal</label></b-col>
@@ -33,7 +33,7 @@
       <b-row>
         <b-col sm="2"><label>Partitions</label></b-col>
         <b-col sm="10">
-          <b-table :items="topicPartitions" :fields="topicPartitionsFields" striped>
+          <b-table :items="topic.partitions" :fields="topicPartitionsFields" striped>
             <template slot="replicas" scope="data">
               <span v-for="replica of data.item.replicas" :key="replica.broker_id" class="topic-partition">
                 <octicon name="heart" v-if="replica.leader"/>
@@ -77,17 +77,7 @@
       axiosService.axios.get(`topics/` + topicName)
         .then(response => {
           this.topic = response.data
-          const topicPartitions = []
-          for (let partitionId = 0; partitionId < this.topic.partitions; partitionId++) {
-            topicPartitions.push({id: partitionId, replicas: []})
-          }
-          this.topicPartitions = topicPartitions
-          this.topicPartitionsJmx = false
-          return axiosService.axios.get(`topics/` + topicName + '/partitions')
-        })
-        .then(response => {
-          this.topicPartitions = response.data
-          this.topicPartitionsJmx = this.topicPartitions.filter(p => p.size || p.num_segments) !== undefined
+          this.topicPartitionsJmx = this.topic.partitions.filter(p => p.size || p.num_segments) !== undefined
         })
         .catch(e => axiosService.helper.handleError(`Topic ${topicName} load failed`, e))
     },

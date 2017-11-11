@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -25,7 +26,7 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class PartitionJmxServiceTest {
+public class TopicServiceJmxTest {
     @ClassRule
     public static final TemporaryFolder TEMPORARY_FOLDER = new TemporaryFolder();
 
@@ -34,7 +35,9 @@ public class PartitionJmxServiceTest {
     public static final String TOPIC_NAME = "partition_jmx_test";
     public static final int TOPIC_PARTITIONS = 3;
 
-    private PartitionJmxService partitionJmxService;
+    @Mock
+    private TopicService topicServiceMock;
+    private TopicServiceJmx topicServiceJmx;
 
     @Mock
     private Supplier<Broker> brokerSupplierMock;
@@ -53,7 +56,7 @@ public class PartitionJmxServiceTest {
                 return connectLocally();
             }
         };
-        partitionJmxService = new PartitionJmxService(jmxService, brokerSupplierMock, new JmxConfiguration(false,  null, null, null, 3000));
+        topicServiceJmx = new TopicServiceJmx(topicServiceMock, jmxService, brokerSupplierMock, new JmxConfiguration(false,  null, null, null, 3000));
     }
 
     @Test
@@ -64,9 +67,11 @@ public class PartitionJmxServiceTest {
         broker.setJmxPort(9999);
         when(brokerSupplierMock.get()).thenReturn(broker);
         List<Partition> partitions = IntStream.range(0, TOPIC_PARTITIONS)
-            .mapToObj(i -> new Partition(TOPIC_NAME, i)).collect(toList());
+            .mapToObj(i -> new Partition(TOPIC_NAME, i, null, null, null)).collect(toList());
+        when(topicServiceMock.getTopic(TOPIC_NAME))
+            .thenReturn(Optional.of(new Topic(TOPIC_NAME, TOPIC_PARTITIONS, 1, false, null, partitions)));
         // When
-        partitions = partitionJmxService.enrich(partitions);
+        partitions = topicServiceJmx.getTopic(TOPIC_NAME).get().getPartitions();
         // Then
         assertThat(partitions, not(nullValue()));
         assertThat(partitions, not(empty()));

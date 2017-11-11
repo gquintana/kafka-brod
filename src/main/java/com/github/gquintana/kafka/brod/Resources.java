@@ -6,7 +6,6 @@ import com.github.gquintana.kafka.brod.consumer.ConsumerGroupsResource;
 import com.github.gquintana.kafka.brod.consumer.ConsumerResource;
 import com.github.gquintana.kafka.brod.security.UserResource;
 import com.github.gquintana.kafka.brod.security.UsersResource;
-import com.github.gquintana.kafka.brod.topic.PartitionsResource;
 import com.github.gquintana.kafka.brod.topic.TopicResource;
 import com.github.gquintana.kafka.brod.topic.TopicsResource;
 
@@ -41,10 +40,6 @@ public class Resources {
 
     public TopicResource topicResource(String name) {
         return new TopicResource(this, application.topicService(), name);
-    }
-
-    public PartitionsResource partitionsResource(String topic) {
-        return new PartitionsResource(this, application.partitionService(), application.partitionJmxService(), topic);
     }
 
     public ConsumerGroupsResource consumerGroupsResource() {

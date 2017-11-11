@@ -1,6 +1,7 @@
 package com.github.gquintana.kafka.brod.topic;
 
 import com.github.gquintana.kafka.brod.EmbeddedKafkaRule;
+import com.github.gquintana.kafka.brod.KafkaService;
 import com.github.gquintana.kafka.brod.ZookeeperService;
 import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
 import org.junit.AfterClass;
@@ -13,17 +14,20 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-public class TopicServiceTest {
+public class TopicServiceImplTest {
     @ClassRule
     public static final TemporaryFolder TEMPORARY_FOLDER = new TemporaryFolder();
 
     @ClassRule
-    public static final EmbeddedKafkaRule KAFKA_RULE = new EmbeddedKafkaRule(TEMPORARY_FOLDER);
+    public static final EmbeddedKafkaRule KAFKA_RULE = new EmbeddedKafkaRule(TEMPORARY_FOLDER, 2);
 
     private static ZookeeperService zookeeperService;
     private static TopicService topicService;
@@ -32,7 +36,8 @@ public class TopicServiceTest {
     @BeforeClass
     public static void setUpClass() throws IOException {
         zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
-        topicService = new TopicService(zookeeperService);
+        KafkaService kafkaService = new KafkaService("localhost:9092", "partition_service_test");
+        topicService = new TopicServiceImpl(zookeeperService, kafkaService);
     }
 
     @Test
@@ -102,7 +107,7 @@ public class TopicServiceTest {
         // Then
         assertThat(topic, notNullValue());
         assertThat(topic.getName(), equalTo(name));
-        assertThat(topic.getPartitions(), equalTo(3));
+        assertThat(topic.getNumPartitions(), equalTo(3));
         assertThat(topic.getReplicationFactor(), equalTo(1));
         assertThat(topic.isInternal(), equalTo(false));
     }
@@ -111,7 +116,7 @@ public class TopicServiceTest {
     public void testGetInternal() throws IOException {
         // Given
         String name = "test_get_internal-" + RANDOM.nextInt(999);
-        topicService.createTopic(new Topic(name, 3, 1, false, new Properties()));
+        topicService.createTopic(new Topic(name, 3, 1, new Properties()));
         KAFKA_RULE.getKafka().send(name, "Message");
         KAFKA_RULE.getKafka().consume(name, "test_get_internal", 5000L);
         // When
@@ -130,6 +135,24 @@ public class TopicServiceTest {
         Topic topic = topicService.getTopic("test_get-not_found").orElse(null);
         // Then
         assertThat(topic, nullValue());
+    }
+
+    @Test
+    public void testGetPartitions() throws Exception {
+        // Given
+        String topicName = "test_part_2_2";
+        topicService.createTopic(new Topic(topicName, 2, 2, null));
+        KAFKA_RULE.getKafka().send(topicName, "Message 1");
+        KAFKA_RULE.getKafka().send(topicName, "Message 2");
+        KAFKA_RULE.getKafka().send(topicName, "Message 3");
+        // When
+        List<Partition> partitions = topicService.getTopic(topicName).get().getPartitions();
+        // Then
+        assertThat(partitions, hasSize(2));
+        Partition partition = partitions.get(0);
+        assertThat(partition.getReplicas(), hasSize(2));
+        assertThat(partition.getReplicas().stream().filter(Replica::isLeader).count(), is(1L));
+        assertThat(partition.getReplicas().stream().map(Replica::getBrokerId).collect(Collectors.toSet()), hasSize(2));
     }
 
     @AfterClass

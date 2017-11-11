@@ -4,6 +4,7 @@ import com.github.gquintana.kafka.brod.EmbeddedKafkaRule;
 import com.github.gquintana.kafka.brod.KafkaService;
 import com.github.gquintana.kafka.brod.ZookeeperService;
 import com.github.gquintana.kafka.brod.topic.TopicService;
+import com.github.gquintana.kafka.brod.topic.TopicServiceImpl;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -26,7 +27,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
-public class ConsumerGroupServiceTest {
+public class ConsumerGroupServiceImplTest {
     @ClassRule
     public static final TemporaryFolder TEMPORARY_FOLDER = new TemporaryFolder();
 
@@ -52,7 +53,7 @@ public class ConsumerGroupServiceTest {
     public void setUp() throws IOException {
         zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
         kafkaService = new KafkaService("localhost:9092", "kafka-brod");
-        topicService = new TopicService(zookeeperService);
+        topicService = new TopicServiceImpl(zookeeperService, kafkaService);
         groupService = new ConsumerGroupServiceImpl(kafkaService);
     }
 

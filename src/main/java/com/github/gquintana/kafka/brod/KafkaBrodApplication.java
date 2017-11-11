@@ -4,21 +4,22 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github.gquintana.kafka.brod.broker.BrokerServiceJmx;
 import com.github.gquintana.kafka.brod.broker.BrokerService;
 import com.github.gquintana.kafka.brod.broker.BrokerServiceCache;
 import com.github.gquintana.kafka.brod.broker.BrokerServiceImpl;
+import com.github.gquintana.kafka.brod.broker.BrokerServiceJmx;
 import com.github.gquintana.kafka.brod.cache.CacheControlResponseFilter;
-import com.github.gquintana.kafka.brod.consumer.ConsumerGroupServiceCache;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupService;
+import com.github.gquintana.kafka.brod.consumer.ConsumerGroupServiceCache;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupServiceImpl;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupServiceJmx;
 import com.github.gquintana.kafka.brod.jmx.JmxConfiguration;
 import com.github.gquintana.kafka.brod.jmx.JmxService;
 import com.github.gquintana.kafka.brod.security.*;
-import com.github.gquintana.kafka.brod.topic.PartitionJmxService;
-import com.github.gquintana.kafka.brod.topic.PartitionService;
 import com.github.gquintana.kafka.brod.topic.TopicService;
+import com.github.gquintana.kafka.brod.topic.TopicServiceCache;
+import com.github.gquintana.kafka.brod.topic.TopicServiceImpl;
+import com.github.gquintana.kafka.brod.topic.TopicServiceJmx;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.listing.ApiListingResource;
@@ -47,11 +48,9 @@ public class KafkaBrodApplication implements AutoCloseable {
     private TopicService topicService;
     private ResourceConfig resourceConfig;
     private JerseyServer jerseyServer;
-    private PartitionService partitionService;
     private ConsumerGroupService consumerGroupService;
     private UserService userService;
     private JmxService jmxService;
-    private PartitionJmxService partitionJmxService;
     private JwtService jwtService;
 
     public KafkaBrodApplication(Configuration configuration) {
@@ -78,10 +77,7 @@ public class KafkaBrodApplication implements AutoCloseable {
 
         userService = createUserService();
         brokerService = createBrokerService();
-        topicService = new TopicService(zookeeperService);
-        partitionService = new PartitionService(zookeeperService, kafkaService);
-        JmxConfiguration brokerJmxConfiguration = JmxConfiguration.create(configuration, "kafka");
-        partitionJmxService = new PartitionJmxService(jmxService, () -> brokerService.getControllerBroker().orElse(null), brokerJmxConfiguration);
+        topicService = createTopicService();
         consumerGroupService = createConsumerGroupService();
         swaggerConfig();
         resourceConfig();
@@ -113,6 +109,20 @@ public class KafkaBrodApplication implements AutoCloseable {
             .orElse(configuration.getAsInteger("data.cache.timeToLive").orElse(null));
         if (timeToLive != null) {
             service = new BrokerServiceCache(service, timeToLive);
+        }
+        return service;
+    }
+
+    private TopicService createTopicService() {
+        TopicService service = new TopicServiceImpl(zookeeperService, kafkaService);
+        // Add JMX
+        JmxConfiguration brokerJmxConfiguration = JmxConfiguration.create(configuration, "kafka");
+        service = new TopicServiceJmx(service, jmxService, () -> brokerService.getControllerBroker().orElse(null), brokerJmxConfiguration);
+        // Add Cache
+        Integer timeToLive = configuration.getAsInteger("data.cache.topic.timeToLive")
+            .orElse(configuration.getAsInteger("data.cache.timeToLive").orElse(null));
+        if (timeToLive != null) {
+            service = new TopicServiceCache(service, timeToLive);
         }
         return service;
     }
@@ -154,10 +164,6 @@ public class KafkaBrodApplication implements AutoCloseable {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, configuration.getAsBoolean("http.json.pretty").orElse(false));
         return objectMapper;
-    }
-
-    public PartitionJmxService partitionJmxService() {
-        return partitionJmxService;
     }
 
     private static class InstanceObjectResolver<T> implements ContextResolver<T> {
@@ -236,10 +242,6 @@ public class KafkaBrodApplication implements AutoCloseable {
 
     public TopicService topicService() {
         return topicService;
-    }
-
-    public PartitionService partitionService() {
-        return partitionService;
     }
 
     public ConsumerGroupService consumerGroupService() {

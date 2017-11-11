@@ -9,9 +9,9 @@ import java.util.List;
 public class Partition {
     private final String topicName;
     private final int id;
-    private Long beginningOffset;
-    private Long endOffset;
-    private List<Replica> replicas;
+    private final Long beginningOffset;
+    private final Long endOffset;
+    private final List<Replica> replicas;
     private Long size;
     private Long numSegments;
 

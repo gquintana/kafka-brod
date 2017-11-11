@@ -2,7 +2,6 @@ package com.github.gquintana.kafka.brod.topic;
 
 import com.github.gquintana.kafka.brod.Resources;
 import com.github.gquintana.kafka.brod.Responses;
-import com.github.gquintana.kafka.brod.broker.Broker;
 import com.github.gquintana.kafka.brod.security.Roles;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -25,12 +24,6 @@ public class TopicResource {
         this.resources = resources;
         this.topicService = topicService;
         this.topicName = topicName;
-    }
-
-    @Path("partitions")
-    public PartitionsResource getPartitions() {
-        return resources.partitionsResource(topicName);
-
     }
 
     /**
