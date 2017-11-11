@@ -4,11 +4,15 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github.gquintana.kafka.brod.broker.BrokerJmxService;
+import com.github.gquintana.kafka.brod.broker.BrokerServiceJmx;
 import com.github.gquintana.kafka.brod.broker.BrokerService;
+import com.github.gquintana.kafka.brod.broker.BrokerServiceCache;
+import com.github.gquintana.kafka.brod.broker.BrokerServiceImpl;
 import com.github.gquintana.kafka.brod.cache.CacheControlResponseFilter;
+import com.github.gquintana.kafka.brod.consumer.ConsumerGroupServiceCache;
 import com.github.gquintana.kafka.brod.consumer.ConsumerGroupService;
-import com.github.gquintana.kafka.brod.consumer.ConsumerJmxService;
+import com.github.gquintana.kafka.brod.consumer.ConsumerGroupServiceImpl;
+import com.github.gquintana.kafka.brod.consumer.ConsumerGroupServiceJmx;
 import com.github.gquintana.kafka.brod.jmx.JmxConfiguration;
 import com.github.gquintana.kafka.brod.jmx.JmxService;
 import com.github.gquintana.kafka.brod.security.*;
@@ -47,10 +51,8 @@ public class KafkaBrodApplication implements AutoCloseable {
     private ConsumerGroupService consumerGroupService;
     private UserService userService;
     private JmxService jmxService;
-    private BrokerJmxService brokerJmxService;
     private PartitionJmxService partitionJmxService;
     private JwtService jwtService;
-    private ConsumerJmxService consumerJmxService;
 
     public KafkaBrodApplication(Configuration configuration) {
         this.configuration = configuration;
@@ -74,37 +76,66 @@ public class KafkaBrodApplication implements AutoCloseable {
 
         objectMapper();
 
-        try {
-            Class<? extends UserService> securityServiceClass = configuration.getAsClass("http.security.service.class")
-                .orElse(FileBasedUserService.class);
-            userService = instantiate(securityServiceClass, new Class[]{Configuration.class}, new Object[]{configuration.getAsConfiguration("http.security")});
-        } catch (ReflectiveOperationException e) {
-            userService = null;
-        }
-        brokerService = new BrokerService(zookeeperService, objectMapper, configuration.getAsInteger("kafka.connectionTimeout").orElse(1000), kafkaService);
-        JmxConfiguration brokerJmxConfiguration = JmxConfiguration.create(configuration, "kafka");
-        brokerJmxService = new BrokerJmxService(jmxService, brokerJmxConfiguration);
+        userService = createUserService();
+        brokerService = createBrokerService();
         topicService = new TopicService(zookeeperService);
         partitionService = new PartitionService(zookeeperService, kafkaService);
+        JmxConfiguration brokerJmxConfiguration = JmxConfiguration.create(configuration, "kafka");
         partitionJmxService = new PartitionJmxService(jmxService, () -> brokerService.getControllerBroker().orElse(null), brokerJmxConfiguration);
-        consumerGroupService = new ConsumerGroupService(kafkaService);
-        consumerJmxService = new ConsumerJmxService(jmxService, consumerJmxConfigurations());
-
+        consumerGroupService = createConsumerGroupService();
         swaggerConfig();
         resourceConfig();
 
         jerseyServer().run();
     }
 
-    private Map<String, JmxConfiguration> consumerJmxConfigurations() {
+    private UserService createUserService() {
+        UserService service;
+        try {
+            Class<? extends UserService> securityServiceClass = configuration.getAsClass("http.security.service.class")
+                .orElse(FileBasedUserService.class);
+            service = instantiate(securityServiceClass, new Class[]{Configuration.class}, new Object[]{configuration.getAsConfiguration("http.security")});
+        } catch (ReflectiveOperationException e) {
+            service = null;
+        }
+        return service;
+    }
+
+    private BrokerService createBrokerService() {
+        BrokerService service = new BrokerServiceImpl(zookeeperService, objectMapper,
+            configuration.getAsInteger("kafka.connectionTimeout").orElse(1000),
+            kafkaService);
+        // Add JMX
+        JmxConfiguration brokerJmxConfiguration = JmxConfiguration.create(configuration, "kafka");
+        service = new BrokerServiceJmx(service, jmxService, brokerJmxConfiguration);
+        // Add cache
+        Integer timeToLive = configuration.getAsInteger("data.cache.broker.timeToLive")
+            .orElse(configuration.getAsInteger("data.cache.timeToLive").orElse(null));
+        if (timeToLive != null) {
+            service = new BrokerServiceCache(service, timeToLive);
+        }
+        return service;
+    }
+
+    private ConsumerGroupService createConsumerGroupService() {
+        ConsumerGroupService service = new ConsumerGroupServiceImpl(kafkaService);
+        // Add JMX
         final String keyPrefix = "consumer";
         final String keySuffix = ".jmx.port";
-        Configuration consumerConfig = configuration.getAsConfiguration(keyPrefix);
-        return consumerConfig.getAsMap().keySet().stream()
+        Configuration consumerConfig = configuration.getAsConfiguration("consumer");
+        Map<String, JmxConfiguration> serviceJmxConfig = consumerConfig.getAsMap().keySet().stream()
             .filter(key -> key.endsWith(keySuffix))
             .map(key -> key.substring(0, key.length() - keySuffix.length()))
             .collect(toMap(groupId -> groupId,
                 groupId -> JmxConfiguration.create(configuration, keyPrefix + "." + groupId)));
+        service = new ConsumerGroupServiceJmx(service, jmxService, serviceJmxConfig);
+        // Add cache
+        Integer timeToLive = configuration.getAsInteger("data.cache.consumer.timeToLive")
+            .orElse(configuration.getAsInteger("data.cache.timeToLive").orElse(null));
+        if (timeToLive != null) {
+            service = new ConsumerGroupServiceCache(service, timeToLive);
+        }
+        return service;
     }
 
     private JerseyServer jerseyServer() throws ReflectiveOperationException {
@@ -123,10 +154,6 @@ public class KafkaBrodApplication implements AutoCloseable {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, configuration.getAsBoolean("http.json.pretty").orElse(false));
         return objectMapper;
-    }
-
-    public BrokerJmxService brokerJmxService() {
-        return brokerJmxService;
     }
 
     public PartitionJmxService partitionJmxService() {
@@ -203,10 +230,6 @@ public class KafkaBrodApplication implements AutoCloseable {
         return resourceConfig;
     }
 
-    public ZookeeperService zookeeperService() {
-        return zookeeperService;
-    }
-
     public BrokerService brokerService() {
         return brokerService;
     }
@@ -221,10 +244,6 @@ public class KafkaBrodApplication implements AutoCloseable {
 
     public ConsumerGroupService consumerGroupService() {
         return consumerGroupService;
-    }
-
-    public ConsumerJmxService consumerJmxService() {
-        return consumerJmxService;
     }
 
     public UserService userService() {

@@ -1,40 +1,32 @@
 package com.github.gquintana.kafka.brod.cache;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class Cache<K, V> {
     private final Map<K, Entry<V>> entries = new HashMap<>();
+    private final Function<K, Optional<V>> supplier;
     private final long timeToLive;
 
-    public Cache(long timeToLive) {
+    public Cache(Function<K, Optional<V>> supplier, long timeToLive) {
+        this.supplier = supplier;
         this.timeToLive = timeToLive;
     }
 
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     private static class Entry<V> {
-        private final long expireTime;
+        private final long expirationTime;
         private final V value;
 
-        private Entry(long expireTime, V value) {
-            this.expireTime = expireTime;
-            this.value = value;
+        public boolean isExpired() {
+            return System.currentTimeMillis() > expirationTime;
         }
-
-        private long getExpireTime() {
-            return expireTime;
-        }
-
-        private V getValue() {
-            return value;
-        }
-    }
-
-    public synchronized void put(K key, V value) {
-        if (value == null) {
-            return;
-        }
-        this.entries.put(key, new Entry<V>(getTime() + timeToLive, value));
     }
 
     long getTime() {
@@ -43,14 +35,18 @@ public class Cache<K, V> {
 
     public synchronized Optional<V> get(K key) {
         Entry<V> entry = entries.get(key);
-        if (entry == null) {
-            return Optional.empty();
+        if (entry != null && !entry.isExpired()) {
+            return Optional.ofNullable(entry.value);
         }
-        if (getTime() > entry.getExpireTime()) {
+        Optional<V> value = supplier.apply(key);
+        if (value.isPresent()) {
+            this.entries.put(key, new Entry<>(getTime() + timeToLive, value.get()));
+            return value;
+        }
+        if (entry != null) {
             entries.remove(key);
-            return Optional.empty();
         }
-        return Optional.of(entry.getValue());
+        return Optional.empty();
     }
 
 }

@@ -9,18 +9,28 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
-public class BrokerJmxServiceTest {
+@RunWith(MockitoJUnitRunner.class)
+public class BrokerServiceJmxTest {
     @ClassRule
     public static final TemporaryFolder TEMPORARY_FOLDER = new TemporaryFolder();
 
     @ClassRule
     public static final EmbeddedKafkaRule KAFKA_RULE = new EmbeddedKafkaRule(TEMPORARY_FOLDER, 1);
 
-    private BrokerJmxService brokerJmxService;
+    @Mock
+    private BrokerService brokerServiceMock;
+    private BrokerServiceJmx brokerServiceJmx;
 
     @Before
     public void setUp() throws Exception {
@@ -30,7 +40,7 @@ public class BrokerJmxServiceTest {
                 return connectLocally();
             }
         };
-        brokerJmxService = new BrokerJmxService(jmxService, new JmxConfiguration(false, null,null, null, 3000));
+        brokerServiceJmx = new BrokerServiceJmx(brokerServiceMock, jmxService, new JmxConfiguration(false, null,null, null, 3000));
     }
 
     @Test
@@ -39,8 +49,9 @@ public class BrokerJmxServiceTest {
         Broker broker = new Broker(0);
         broker.setHost("localhost");
         broker.setJmxPort(9999);
+        when(brokerServiceMock.getBroker(eq(0))).thenReturn(Optional.of(broker));
         // When
-        broker = brokerJmxService.enrich(broker);
+        broker = brokerServiceJmx.getBroker(0).get();
         // Then
         assertThat(broker.getJmxMetrics(), not(nullValue()));
         assertThat(broker.getJmxMetrics().entrySet(), not(empty()));

@@ -24,12 +24,10 @@ import java.util.Optional;
 public class BrokersResource {
     private final Resources resources;
     private final BrokerService brokerService;
-    private final BrokerJmxService brokerJmxService;
 
-    public BrokersResource(Resources resources, BrokerService brokerService, BrokerJmxService brokerJmxService) {
+    public BrokersResource(Resources resources, BrokerService brokerService) {
         this.resources = resources;
         this.brokerService = brokerService;
-        this.brokerJmxService = brokerJmxService;
     }
 
     /**
@@ -55,8 +53,6 @@ public class BrokersResource {
     @Path("{id}")
     @RolesAllowed({Roles.USER})
     public Response getBroker(@PathParam("id") int id) {
-        Optional<Broker> optBroker = brokerService.getBroker(id);
-        optBroker = optBroker.map(b -> brokerJmxService.enrich(b));
-        return Responses.of(optBroker);
+        return Responses.of(brokerService.getBroker(id));
     }
 }

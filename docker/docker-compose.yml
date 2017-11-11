@@ -1,0 +1,39 @@
+version: '2'
+services:
+    zookeeper:
+        image: zookeeper:3.4.10
+        container_name: zookeeper
+        restart: always
+        ports:
+            - 2181:2181
+        volumes:
+          - ./zookeeper/data:/data
+
+    kafka_0:
+        image: gquintana/kafka:0.10.2.0
+        container_name: kafka_0
+        restart: always
+        volumes:
+          - ./kafka-0/data:/data
+        ports:
+            - 9092:9092
+            - 9999:9999
+        environment:
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper
+            KAFKA_BROKER_ID: 0
+            KAFKA_LOGS_DIR: /data
+            KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://172.17.0.1:9092"
+    kafka_1:
+        image: gquintana/kafka:0.10.2.0
+        container_name: kafka_1
+        restart: always
+        volumes:
+          - ./kafka-1/data:/data
+        ports:
+            - 9192:9092
+            - 9899:9999
+        environment:
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper
+            KAFKA_BROKER_ID: 1
+            KAFKA_LOGS_DIR: /data
+            KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://172.17.0.1:9192"

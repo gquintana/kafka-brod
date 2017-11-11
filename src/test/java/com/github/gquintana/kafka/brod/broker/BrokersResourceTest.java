@@ -24,13 +24,11 @@ public class BrokersResourceTest {
 
     @Mock
     public BrokerService brokerService;
-    @Mock
-    public BrokerJmxService brokerJmxService;
     public BrokersResource brokersResource;
 
     @Before
     public void setUp() {
-        brokersResource = new BrokersResource(null, brokerService, brokerJmxService);
+        brokersResource = new BrokersResource(null, brokerService);
     }
 
     @Test
@@ -47,7 +45,6 @@ public class BrokersResourceTest {
     public void testGetByIdWhenFound() {
         // Given
         when(brokerService.getBroker(eq(2))).thenReturn(Optional.of(new Broker(2)));
-        when(brokerJmxService.enrich(Mockito.any(Broker.class))).thenReturn(new Broker(2));
         // When
         Response response = brokersResource.getBroker(2);
         // Then

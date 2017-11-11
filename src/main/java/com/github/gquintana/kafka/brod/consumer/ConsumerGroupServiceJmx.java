@@ -3,15 +3,19 @@ package com.github.gquintana.kafka.brod.consumer;
 import com.github.gquintana.kafka.brod.jmx.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 @Slf4j
-public class ConsumerJmxService {
+public class ConsumerGroupServiceJmx implements ConsumerGroupService {
+    private final ConsumerGroupService delegate;
     private final JmxService jmxService;
     private final Map<String, JmxConfiguration> jmxConfigurations;
 
-    public ConsumerJmxService(JmxService jmxService, Map<String, JmxConfiguration> jmxConfigurations) {
+    public ConsumerGroupServiceJmx(ConsumerGroupService delegate, JmxService jmxService, Map<String, JmxConfiguration> jmxConfigurations) {
+        this.delegate = delegate;
         this.jmxService = jmxService;
         this.jmxConfigurations = jmxConfigurations;
     }
@@ -24,7 +28,7 @@ public class ConsumerJmxService {
             .build();
     }
 
-    public Consumer enrich(String groupId, Consumer consumer) {
+    private Consumer enrich(String groupId, Consumer consumer) {
         String jmxHost = consumer.getClientHost();
         if (jmxHost == null) {
             jmxHost = consumer.getClientIp();
@@ -40,5 +44,25 @@ public class ConsumerJmxService {
             LOGGER.info("Failed to get Consumer {} JMX Metrics: {}, {}", consumer.getId(), e.getMessage(), e.getCause() == null ? "" : e.getCause().getMessage());
         }
         return consumer;
+    }
+
+    @Override
+    public List<String> getGroupIds() {
+        return delegate.getGroupIds();
+    }
+
+    @Override
+    public Optional<ConsumerGroup> getGroup(String groupId) {
+        return delegate.getGroup(groupId);
+    }
+
+    @Override
+    public Optional<ConsumerGroup> getGroup(String groupId, String topic) {
+        return delegate.getGroup(groupId, topic);
+    }
+
+    @Override
+    public Optional<Consumer> getConsumer(String groupId, String consumerId, String topic) {
+        return delegate.getConsumer(groupId, consumerId, topic).map(c -> this.enrich(groupId, c));
     }
 }

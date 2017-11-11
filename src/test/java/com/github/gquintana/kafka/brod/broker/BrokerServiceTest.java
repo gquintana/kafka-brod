@@ -27,7 +27,7 @@ public class BrokerServiceTest {
     @ClassRule
     public static final EmbeddedKafkaRule KAFKA_RULE = new EmbeddedKafkaRule(TEMPORARY_FOLDER, 2);
 
-    private static BrokerService brokerService;
+    private static BrokerServiceImpl brokerService;
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -38,7 +38,7 @@ public class BrokerServiceTest {
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        brokerService = new BrokerService(zookeeperService, objectMapper, 1000, kafkaService);
+        brokerService = new BrokerServiceImpl(zookeeperService, objectMapper, 1000, kafkaService);
     }
 
     @Test

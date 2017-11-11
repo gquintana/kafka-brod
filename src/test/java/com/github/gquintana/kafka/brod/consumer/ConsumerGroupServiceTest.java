@@ -53,7 +53,7 @@ public class ConsumerGroupServiceTest {
         zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
         kafkaService = new KafkaService("localhost:9092", "kafka-brod");
         topicService = new TopicService(zookeeperService);
-        groupService = new ConsumerGroupService(kafkaService);
+        groupService = new ConsumerGroupServiceImpl(kafkaService);
     }
 
     private Consumer startConsumer(String groupId, String ... topics) throws InterruptedException {

@@ -27,8 +27,8 @@ public class ConsumerGroupsResource {
     @GET
     @ApiOperation(value = "List consumer groups")
     @RolesAllowed({Roles.USER})
-    public List<String> getGroupIds(@QueryParam("broker_id") Integer brokerId) {
-        return brokerId == null ? groupService.getGroupIds() : groupService.getGroupIds(brokerId);
+    public List<String> getGroupIds() {
+        return groupService.getGroupIds();
     }
 
     /**

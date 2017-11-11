@@ -23,7 +23,7 @@ public class Resources {
     public Resources(KafkaBrodApplication application) {
         this.application = application;
         this.applicationResource = new KafkaBrodResource(this);
-        brokersResource = new BrokersResource(this, application.brokerService(), application.brokerJmxService());
+        brokersResource = new BrokersResource(this, application.brokerService());
         topicsResource = new TopicsResource(this, application.topicService());
         consumerGroupsResource = new ConsumerGroupsResource(this, application.consumerGroupService());
         apiResource = new ApiResource(this);
@@ -76,6 +76,6 @@ public class Resources {
     }
 
     public ConsumerResource consumerResource(String groupId, String consumerId) {
-        return new ConsumerResource(this, application.consumerGroupService(), application.consumerJmxService(), groupId, consumerId);
+        return new ConsumerResource(this, application.consumerGroupService(), groupId, consumerId);
     }
 }
