@@ -1,7 +1,6 @@
 package com.github.gquintana.kafka.brod.consumer;
 
 import com.github.gquintana.kafka.brod.EmbeddedKafkaRule;
-import com.github.gquintana.kafka.brod.broker.BrokerService;
 import com.github.gquintana.kafka.brod.jmx.JmxConfiguration;
 import com.github.gquintana.kafka.brod.jmx.JmxConnection;
 import com.github.gquintana.kafka.brod.jmx.JmxException;
@@ -10,16 +9,13 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
@@ -56,7 +52,7 @@ public class ConsumerGroupServiceJmxTest {
             }
         };
         consumer = KAFKA_RULE.getKafka().createConsumer(GROUP_ID, CLIENT_ID);
-        consumer.subscribe(asList(TOPIC_NAME));
+        consumer.subscribe(singletonList(TOPIC_NAME));
         Map<String, JmxConfiguration> jmxConfigurations = new HashMap<>();
         jmxConfigurations.put(GROUP_ID, new JmxConfiguration(false, 8888, null, null, 3000));
         consumerGroupServiceJmx = new ConsumerGroupServiceJmx(consumerGroupServiceMock, jmxService, jmxConfigurations);

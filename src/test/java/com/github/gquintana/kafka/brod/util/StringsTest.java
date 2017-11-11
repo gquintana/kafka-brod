@@ -3,8 +3,7 @@ package com.github.gquintana.kafka.brod.util;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItems;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class StringsTest {
     @Test

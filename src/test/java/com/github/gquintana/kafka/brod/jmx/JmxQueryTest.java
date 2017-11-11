@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 

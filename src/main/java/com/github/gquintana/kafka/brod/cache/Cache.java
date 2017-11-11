@@ -2,7 +2,6 @@ package com.github.gquintana.kafka.brod.cache;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;

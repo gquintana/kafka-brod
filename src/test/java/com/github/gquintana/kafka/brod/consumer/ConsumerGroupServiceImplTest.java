@@ -38,7 +38,6 @@ public class ConsumerGroupServiceImplTest {
     private static final int PARTITIONS = 3;
     private ConsumerGroupService groupService;
     private ZookeeperService zookeeperService;
-    private TopicService topicService;
     private ExecutorService executor = Executors.newFixedThreadPool(6);
     private KafkaService kafkaService;
     private List<TopicConsumerRunnable> runnables = new ArrayList<>();
@@ -53,12 +52,11 @@ public class ConsumerGroupServiceImplTest {
     public void setUp() throws IOException {
         zookeeperService = new ZookeeperService("localhost:2181", 3000, 3000);
         kafkaService = new KafkaService("localhost:9092", "kafka-brod");
-        topicService = new TopicServiceImpl(zookeeperService, kafkaService);
         groupService = new ConsumerGroupServiceImpl(kafkaService);
     }
 
     private Consumer startConsumer(String groupId, String ... topics) throws InterruptedException {
-        Consumer<Long, String> consumer = (Consumer<Long, String>) KAFKA_RULE.getKafka().createConsumer(groupId);
+        Consumer<Long, String> consumer = KAFKA_RULE.getKafka().createConsumer(groupId);
         TopicConsumerListener listener = new TopicConsumerListener();
         TopicConsumerRunnable runnable = new TopicConsumerRunnable(groupId, topics, listener);
         executor.execute(runnable);
@@ -153,7 +151,7 @@ public class ConsumerGroupServiceImplTest {
 
         public TopicConsumerRunnable(String groupId, String[] topics, TopicConsumerListener listener) {
             this.listener = listener;
-            consumer = (Consumer<Long, String>) KAFKA_RULE.getKafka().createConsumer(groupId);
+            consumer = KAFKA_RULE.getKafka().createConsumer(groupId);
             consumer.subscribe(Arrays.asList(topics), this.listener);
         }
 

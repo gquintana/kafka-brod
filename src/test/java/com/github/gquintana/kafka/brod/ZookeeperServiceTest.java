@@ -1,6 +1,9 @@
 package com.github.gquintana.kafka.brod;
 
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -8,7 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class ZookeeperServiceTest {
     @ClassRule

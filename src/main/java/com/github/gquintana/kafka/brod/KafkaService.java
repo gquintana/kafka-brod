@@ -11,7 +11,6 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import scala.Predef;
 import scala.collection.JavaConversions;
 
-import java.io.Closeable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;

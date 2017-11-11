@@ -8,14 +8,14 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-
 import java.util.HashSet;
 import java.util.Optional;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -36,7 +36,7 @@ public class UserResourceTest {
         // Given
         when(userService.authenticate(eq("robert"), eq("bobby123"))).thenReturn(true);
         when(jwtService.createToken(eq("robert"))).thenReturn("cafe.babe");
-        when(userService.getUser(eq("robert"))).thenReturn(Optional.of(new User("robert", new HashSet<>(asList("USER")))));
+        when(userService.getUser(eq("robert"))).thenReturn(Optional.of(new User("robert", new HashSet<>(singletonList("USER")))));
         // When
         Response response = userResource.authenticate("bobby123");
         // Then

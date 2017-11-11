@@ -12,9 +12,6 @@ import javax.management.remote.JMXConnector;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toMap;
 
 public class JmxConnection implements AutoCloseable {
     /**

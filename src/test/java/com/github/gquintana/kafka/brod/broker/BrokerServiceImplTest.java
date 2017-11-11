@@ -99,8 +99,8 @@ public class BrokerServiceImplTest {
         assertThat(broker.getId(), is(0));
         assertThat(broker.getPort(), equalTo(9092));
         assertThat(broker.getEndpoints().size(), equalTo(1));
-        assertThat(broker.getController().booleanValue(), is(true));
-        assertThat(broker.getAvailable().booleanValue(), is(true));
+        assertThat(broker.getController(), is(true));
+        assertThat(broker.getAvailable(), is(true));
 
     }
 

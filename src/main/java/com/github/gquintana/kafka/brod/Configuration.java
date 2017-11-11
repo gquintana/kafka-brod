@@ -53,7 +53,7 @@ public class Configuration {
         config.putAll(properties.entrySet().stream()
             .collect(Collectors.toMap(
                 p -> p.getKey().toString(),
-                p -> p.getValue())));
+                Map.Entry::getValue)));
     }
 
     public Map<String, Object> getAsMap() {
@@ -115,7 +115,7 @@ public class Configuration {
             return ((Class) obj);
         } else if (obj instanceof String) {
             try {
-                return (Class) Class.forName((String) obj);
+                return Class.forName((String) obj);
             } catch (ClassNotFoundException e) {
                 throw new KafkaBrodException("Can not convert to Class " + obj, e);
             }
@@ -134,7 +134,7 @@ public class Configuration {
             .filter(e -> e.getKey().startsWith(prefix))
             .collect(Collectors.toMap(
                 e -> e.getKey().substring(prefix.length()),
-                e -> e.getValue()
+                Map.Entry::getValue
             ));
         return new Configuration(subConfig);
     }

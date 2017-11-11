@@ -29,7 +29,7 @@ public class ConsumerGroupServiceImpl implements ConsumerGroupService {
     @Override
     public List<String> getGroupIds() {
         return getGroupOverviews().stream()
-            .map(cgo -> cgo.groupId())
+            .map(GroupOverview::groupId)
             .collect(toList());
     }
 
@@ -114,7 +114,7 @@ public class ConsumerGroupServiceImpl implements ConsumerGroupService {
         }
         member.setId(consumerSummary.consumerId());
         member.setPartitions(asJavaCollection(consumerSummary.assignment()).stream()
-            .map(p -> consumerPartitions.get(p))
+            .map(consumerPartitions::get)
             .filter(Objects::nonNull)
             .sorted(Comparator.comparing(ConsumerPartition::getTopicName).thenComparing(ConsumerPartition::getId))
             .collect(toList()));

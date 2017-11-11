@@ -29,7 +29,7 @@ public class ObjectExpirerTest {
             .collect(toList());
         runnables.forEach(executorService::submit);
         Thread.sleep(600L);
-        runnables.forEach(r -> r.stop());
+        runnables.forEach(UsingIntRunnable::stop);
         // Then
         runnables.forEach(r -> assertThat(r.getInts().size(), equalTo(1)));
     }

@@ -2,10 +2,11 @@ package com.github.gquintana.kafka.brod.security;
 
 import com.github.gquintana.kafka.brod.Configuration;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public class FileBasedUserService implements UserService {

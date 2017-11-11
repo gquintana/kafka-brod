@@ -6,9 +6,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 public class FileBasedUserServiceTest {

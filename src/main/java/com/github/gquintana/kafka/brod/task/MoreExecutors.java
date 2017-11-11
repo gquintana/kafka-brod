@@ -22,6 +22,6 @@ public final class MoreExecutors {
     public static ThreadPoolExecutor threadPool(String name, int queueSize, int threadCount) {
         RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
         ThreadFactory threadFactory = new NamedThreadFactory(name);
-        return new ThreadPoolExecutor(threadCount, threadCount, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(queueSize), threadFactory, rejectedExecutionHandler);
+        return new ThreadPoolExecutor(threadCount, threadCount, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(queueSize), threadFactory, rejectedExecutionHandler);
     }
 }

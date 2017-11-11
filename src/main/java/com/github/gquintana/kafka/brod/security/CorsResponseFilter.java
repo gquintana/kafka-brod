@@ -3,9 +3,7 @@ package com.github.gquintana.kafka.brod.security;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
-import java.security.Principal;
 
 /**
  * CORS headers to allow request from browser.

@@ -2,7 +2,6 @@ package com.github.gquintana.kafka.brod.topic;
 
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
