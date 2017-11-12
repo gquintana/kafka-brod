@@ -16,6 +16,7 @@ import com.github.gquintana.kafka.brod.consumer.ConsumerGroupServiceJmx;
 import com.github.gquintana.kafka.brod.jmx.JmxConfiguration;
 import com.github.gquintana.kafka.brod.jmx.JmxService;
 import com.github.gquintana.kafka.brod.security.*;
+import com.github.gquintana.kafka.brod.task.MoreExecutors;
 import com.github.gquintana.kafka.brod.topic.TopicService;
 import com.github.gquintana.kafka.brod.topic.TopicServiceCache;
 import com.github.gquintana.kafka.brod.topic.TopicServiceImpl;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.ext.ContextResolver;
 import java.lang.reflect.Constructor;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,6 +54,7 @@ public class KafkaBrodApplication implements AutoCloseable {
     private UserService userService;
     private JmxService jmxService;
     private JwtService jwtService;
+    private ExecutorService cacheExecutorService;
 
     public KafkaBrodApplication(Configuration configuration) {
         this.configuration = configuration;
@@ -75,6 +78,11 @@ public class KafkaBrodApplication implements AutoCloseable {
 
         objectMapper();
 
+        cacheExecutorService = MoreExecutors.threadPool(
+            "cache-loader",
+            configuration.getAsInteger("data.cache.threadPool.queueSize").orElse(100),
+            configuration.getAsInteger("data.cache.threadPool.threadCount").orElse(4)
+        );
         userService = createUserService();
         brokerService = createBrokerService();
         topicService = createTopicService();
@@ -108,7 +116,7 @@ public class KafkaBrodApplication implements AutoCloseable {
         Integer timeToLive = configuration.getAsInteger("data.cache.broker.timeToLive")
             .orElse(configuration.getAsInteger("data.cache.timeToLive").orElse(null));
         if (timeToLive != null) {
-            service = new BrokerServiceCache(service, timeToLive);
+            service = new BrokerServiceCache(service, timeToLive, cacheExecutorService);
         }
         return service;
     }
@@ -122,7 +130,7 @@ public class KafkaBrodApplication implements AutoCloseable {
         Integer timeToLive = configuration.getAsInteger("data.cache.topic.timeToLive")
             .orElse(configuration.getAsInteger("data.cache.timeToLive").orElse(null));
         if (timeToLive != null) {
-            service = new TopicServiceCache(service, timeToLive);
+            service = new TopicServiceCache(service, timeToLive, cacheExecutorService);
         }
         return service;
     }
@@ -143,7 +151,7 @@ public class KafkaBrodApplication implements AutoCloseable {
         Integer timeToLive = configuration.getAsInteger("data.cache.consumer.timeToLive")
             .orElse(configuration.getAsInteger("data.cache.timeToLive").orElse(null));
         if (timeToLive != null) {
-            service = new ConsumerGroupServiceCache(service, timeToLive);
+            service = new ConsumerGroupServiceCache(service, timeToLive, cacheExecutorService);
         }
         return service;
     }

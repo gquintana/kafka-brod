@@ -1,17 +1,25 @@
 package com.github.gquintana.kafka.brod.topic;
 
-import com.github.gquintana.kafka.brod.cache.Cache;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 public class TopicServiceCache implements TopicService {
     private final TopicService delegate;
-    private final Cache<String, Topic> cache;
+    private final LoadingCache<String, Optional<Topic>> cache;
 
-    public TopicServiceCache(TopicService delegate, long timeToLive) {
+    public TopicServiceCache(TopicService delegate, long timeToLive, Executor executor) {
         this.delegate = delegate;
-        this.cache = new Cache<>(delegate::getTopic, timeToLive);
+        this.cache = CacheBuilder.newBuilder()
+            .expireAfterAccess(timeToLive, TimeUnit.MILLISECONDS)
+            .refreshAfterWrite(timeToLive / 2, TimeUnit.MILLISECONDS)
+            .build(CacheLoader.asyncReloading(CacheLoader.from(delegate::getTopic), executor));
     }
 
     @Override
@@ -22,13 +30,13 @@ public class TopicServiceCache implements TopicService {
     @Override
     public void deleteTopic(String name) {
         delegate.deleteTopic(name);
-        cache.remove(name);
+        cache.invalidate(name);
     }
 
     @Override
     public void updateTopic(Topic topic) {
         delegate.updateTopic(topic);
-        cache.remove(topic.getName());
+        cache.invalidate(topic.getName());
     }
 
     @Override
@@ -38,7 +46,7 @@ public class TopicServiceCache implements TopicService {
 
     @Override
     public Optional<Topic> getTopic(String name) {
-        return cache.get(name);
+        return cache.getUnchecked(name);
     }
 
     @Override

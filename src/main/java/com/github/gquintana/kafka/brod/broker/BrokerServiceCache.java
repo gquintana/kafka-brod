@@ -1,22 +1,29 @@
 package com.github.gquintana.kafka.brod.broker;
 
-import com.github.gquintana.kafka.brod.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 public class BrokerServiceCache implements BrokerService {
     private final BrokerService delegate;
-    private final Cache<Integer, Broker> cache;
+    private final LoadingCache<Integer, Optional<Broker>> cache;
 
-    public BrokerServiceCache(BrokerService delegate, long timeToLive) {
+    public BrokerServiceCache(BrokerService delegate, long timeToLive, Executor executor) {
         this.delegate = delegate;
-        this.cache = new Cache<>(delegate::getBroker, timeToLive);
+        this.cache = CacheBuilder.newBuilder()
+            .expireAfterAccess(timeToLive, TimeUnit.MILLISECONDS)
+            .refreshAfterWrite(timeToLive / 2, TimeUnit.MILLISECONDS)
+            .build(CacheLoader.asyncReloading(CacheLoader.from(delegate::getBroker), executor));
     }
 
     @Override
     public Optional<Broker> getBroker(int id) {
-        return cache.get(id);
+        return cache.getUnchecked(id);
     }
 
     @Override

@@ -13,6 +13,7 @@
         <jackson.version>1.7.21</jackson.version>
         <slf4j.version>1.7.21</slf4j.version>
         <jersey.version>2.23.2</jersey.version>
+        <cache2k.version>1.0.0.Final</cache2k.version>
       <kafka.version>0.11.0.1</kafka.version>
     </properties>
     <dependencies>
@@ -69,6 +70,11 @@
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt</artifactId>
             <version>0.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>20.0</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
