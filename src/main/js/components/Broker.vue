@@ -27,8 +27,11 @@
       <b-row v-if="broker.jmx_metrics">
         <b-col sm="1"><label>JMX Metrics</label></b-col>
         <b-col sm="11">
-          <b-table striped hover :items="brokerJmxMetrics" :fields="brokerJmxFields">
-          </b-table>
+          <b-table striped hover :items="brokerJmxMetrics" :fields="brokerJmxFields"
+            :current-page="brokerJmxPagination.currentPage" :per-page="brokerJmxPagination.perPage"/>
+          <div v-if="brokerJmxMetrics.length>brokerJmxPagination.perPage">
+            <b-pagination :total-rows="brokerJmxMetrics.length" :per-page="brokerJmxPagination.perPage" v-model="brokerJmxPagination.currentPage" />
+          </div>
         </b-col>
       </b-row>
     </div>
@@ -44,6 +47,10 @@
       return {
         brokerId: null,
         broker: null,
+        brokerJmxPagination: {
+          perPage: 10,
+          currentPage: 1
+        },
         brokerJmxFields: jmxService.jmxFields
       }
     },

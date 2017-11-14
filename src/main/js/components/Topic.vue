@@ -33,7 +33,9 @@
       <b-row>
         <b-col sm="2"><label>Partitions</label></b-col>
         <b-col sm="10">
-          <b-table :items="topic.partitions" :fields="topicPartitionsFields" striped>
+          <b-table :items="topicPartitions" :fields="topicPartitionsFields"
+            :current-page="topicPartitionsPagination.currentPage" :per-page="topicPartitionsPagination.perPage"
+            striped>
             <template slot="replicas" scope="data">
               <span v-for="replica of data.item.replicas" :key="replica.broker_id" class="topic-partition">
                 <octicon name="heart" v-if="replica.leader"/>
@@ -42,6 +44,9 @@
               </span>
             </template>
           </b-table>
+          <div v-if="topicPartitions.length>topicPartitionsPagination.perPage">
+            <b-pagination :total-rows="topicPartitions.length" :per-page="topicPartitionsPagination.perPage" v-model="topicPartitionsPagination.currentPage" />
+          </div>
         </b-col>
       </b-row>
     </div>
@@ -65,8 +70,11 @@
     data: function () {
       return {
         topicName: null,
-        topic: [],
-        topicPartitions: [],
+        topic: null,
+        topicPartitionsPagination: {
+          perPage: 10,
+          currentPage: 1
+        },
         topicPartitionsJmx: false
       }
     },
@@ -96,6 +104,9 @@
           })
         }
         return breadcrumb
+      },
+      topicPartitions: function () {
+        return this.topic ? this.topic.partitions : []
       },
       topicPartitionsFields: function () {
         return this.topicPartitionsJmx ? TOPIC_PARTITIONS_FIELDS_JMX : TOPIC_PARTITIONS_FIELDS

@@ -13,17 +13,31 @@
       <b-row>
         <b-col sm="2"><label>Members</label></b-col>
         <b-col sm="10">
-          <b-table striped hover :items="group.members" :fields="memberFields" @row-clicked="memberClicked" class="table-clickable"/>
+          <b-table striped hover :items="group.members" :fields="memberFields"
+            :current-page="memberPagination.currentPage" :per-page="memberPagination.perPage"
+            @row-clicked="memberClicked" class="table-clickable">
+            <template slot="id" scope="data">
+              <router-link :to="{ name: 'Consumer', params: { groupId: group.id, id: data.item.id } }"><a>{{ data.item.id }}</a></router-link>
+            </template>
+          </b-table>
+          <div v-if="group.members.length>memberPagination.perPage">
+            <b-pagination :per-page="memberPagination.perPage" :total-rows="group.members.length" v-model="memberPagination.currentPage"/>
+          </div>
         </b-col>
       </b-row>
       <b-row>
         <b-col sm="2"><label>Topics</label></b-col>
         <b-col sm="10">
-          <b-table striped hover :items="topics" :fields="topicFields">
+          <b-table striped hover :items="topics" :fields="topicFields"
+            :current-page="topicPagination.currentPage" :per-page="topicPagination.perPage"
+            >
             <template slot="name" scope="data">
               <router-link :to="{name:'Topic', params:{name: data.item.name}}"><a>{{ data.item.name }}</a></router-link>
             </template>
           </b-table>
+          <div v-if="topics.length>topicPagination.perPage">
+            <b-pagination :per-page="topicPagination.perPage" :total-rows="topics.length" v-model="topicPagination.currentPage"/>
+          </div>
         </b-col>
       </b-row>
     </div>
@@ -54,6 +68,10 @@
     data: function () {
       return {
         group: [],
+        memberPagination: {
+          perPage: 10,
+          currentPage: 1
+        },
         memberFields: [
           {key: 'id', sortable: true},
           {key: 'client_id'},
@@ -62,6 +80,10 @@
           {key: 'lag_total', tdClass: 'numeric', sortable: true}
         ],
         topics: [],
+        topicPagination: {
+          perPage: 10,
+          currentPage: 1
+        },
         topicFields: [
           {key: 'name', sortable: true},
           {key: 'partition_count', tdClass: 'numeric', sortable: true},

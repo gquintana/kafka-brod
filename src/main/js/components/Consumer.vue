@@ -13,11 +13,14 @@
       <b-row>
         <b-col sm="2"><label>Partitions</label></b-col>
         <b-col sm="10">
-          <b-table striped hover :items="consumer.partitions" :fields="partitionFields">
+          <b-table striped hover :items="consumerPartitions" :fields="consumerPartitionFields">
             <template slot="topic_name" scope="data">
               <router-link :to="{name:'Topic', params:{name: data.item.topic_name}}"><a>{{ data.item.topic_name}}</a></router-link>
             </template>
           </b-table>
+          <div v-if="consumerPartitions.length>consumerPartitionPagination.perPage">
+            <b-pagination :per-page="consumerPartitionPagination.perPage" :total-rows="consumerPartitions.length" v-model="consumerPartitionPagination.currentPage"/>
+          </div>
         </b-col>
       </b-row>
       <b-row v-if="consumer.jmx_metrics">
@@ -25,6 +28,9 @@
         <b-col sm="10">
           <b-table striped hover :items="consumerJmxMetrics" :fields="consumerJmxFields"/>
         </b-col>
+          <div v-if="consumerJmxMetrics.length>consumerJmxPagination.perPage">
+            <b-pagination :per-page="consumerJmxPagination.perPage" :total-rows="consumerJmxMetrics.length" v-model="consumerJmxPagination.currentPage"/>
+          </div>
       </b-row>
     </div>
   </b-container>
@@ -40,13 +46,21 @@
       return {
         groupId: null,
         consumer: null,
-        partitionFields: [
+        consumerPartitionPagination: {
+          perPage: 10,
+          currentPage: 1
+        },
+        consumerPartitionFields: [
           {key: 'topic_name', sortable: true},
           {key: 'id', tdClass: 'numeric', sortable: true},
           {key: 'commited_offset', tdClass: 'numeric', sortable: true},
           {key: 'end_offset', tdClass: 'numeric', sortable: true},
           {key: 'lag', tdClass: 'numeric', sortable: true}
         ],
+        consumerJmxPagination: {
+          perPage: 10,
+          currentPage: 1
+        },
         consumerJmxFields: jmxService.jmxFields
       }
     },
@@ -64,6 +78,9 @@
         .catch(e => axiosService.helper.handleError(`Consumer ${consumerId} load failed`, e))
     },
     computed: {
+      consumerPartitions: function () {
+        return this.consumer ? this.consumer.partitions : []
+      },
       consumerJmxMetrics: function () {
         return jmxService.formatJmxMetrics(this.consumer)
       },
