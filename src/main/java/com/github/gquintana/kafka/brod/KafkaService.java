@@ -19,24 +19,25 @@ import java.util.Map;
 @Slf4j
 public class KafkaService implements AutoCloseable {
     private final String bootstrapServers;
-    private final String clientId;
-    private final long maxIdleMs;
+    private final Map<String, Object> clientConfig;
     private final ObjectExpirer<AdminClient> adminClient;
     private final ObjectExpirer<kafka.admin.AdminClient> scalaAdminClient;
 
     public KafkaService(String bootstrapServers, String clientId) {
-        this(bootstrapServers, clientId, 540000);
+        this(bootstrapServers, new HashMap<>());
     }
 
-    public KafkaService(String bootstrapServers, String clientId, long maxIdleMs) {
+    public KafkaService(String bootstrapServers, Map<String, Object> clientConfig) {
         this.bootstrapServers = bootstrapServers;
-        this.maxIdleMs = maxIdleMs;
-        if (clientId == null) {
-            clientId = generateClientId();
+        String lClientId = (String) clientConfig.get(CommonClientConfigs.CLIENT_ID_CONFIG);
+        if (lClientId == null) {
+            clientConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG, generateClientId());
         }
-        this.clientId = clientId;
-        adminClient = new ObjectExpirer<>(this::createAdminClient, maxIdleMs);
-        scalaAdminClient = new ObjectExpirer<>(this::createScalaAdminClient, maxIdleMs);
+        long lMaxIdleMs = Long.parseLong(clientConfig.getOrDefault(CommonClientConfigs.CONNECTIONS_MAX_IDLE_MS_CONFIG, 540000).toString());
+        clientConfig.put(CommonClientConfigs.CONNECTIONS_MAX_IDLE_MS_CONFIG, lMaxIdleMs);
+        this.clientConfig = clientConfig;
+        adminClient = new ObjectExpirer<>(this::createAdminClient, lMaxIdleMs);
+        scalaAdminClient = new ObjectExpirer<>(this::createScalaAdminClient, lMaxIdleMs);
     }
 
     private static String generateClientId() {
@@ -49,21 +50,22 @@ public class KafkaService implements AutoCloseable {
         return clientId;
     }
 
+    private Map<String, Object> createClientConfig() {
+        Map<String, Object> config = new HashMap<>();
+        config.putAll(clientConfig);
+        config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        return config;
+    }
+
     private AdminClient createAdminClient() {
         LOGGER.info("Connecting to Kafka Client Admin");
-        Map<String, Object> config = new HashMap<>();
-        config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(CommonClientConfigs.CLIENT_ID_CONFIG, clientId);
-        config.put(CommonClientConfigs.CONNECTIONS_MAX_IDLE_MS_CONFIG, maxIdleMs);
+        Map<String, Object> config = createClientConfig();
         return AdminClient.create(config);
     }
 
     private kafka.admin.AdminClient createScalaAdminClient() {
         LOGGER.info("Connecting to Kafka Internal Admin");
-        Map<String, Object> config = new HashMap<>();
-        config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(CommonClientConfigs.CLIENT_ID_CONFIG, clientId);
-        config.put(CommonClientConfigs.CONNECTIONS_MAX_IDLE_MS_CONFIG, maxIdleMs);
+        Map<String, Object> config = createClientConfig();
         return kafka.admin.AdminClient.create(JavaConversions.mapAsScalaMap(config).toMap(Predef.conforms()));
     }
 
@@ -76,11 +78,9 @@ public class KafkaService implements AutoCloseable {
     }
 
     public Consumer<String, String> consumer(String groupId) {
-        Map<String, Object> consumerConfig = new HashMap<>();
-        consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        Map<String, Object> consumerConfig = createClientConfig();
         consumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        consumerConfig.put(ConsumerConfig.CLIENT_ID_CONFIG, clientId + "-" + Thread.currentThread().getName());
         consumerConfig.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
         consumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
